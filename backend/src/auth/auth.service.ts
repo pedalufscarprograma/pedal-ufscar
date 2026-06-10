@@ -14,6 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import {
   User,
   UserStatus,
+  UserType,
 } from '../users/entities/user.entity';
 
 import { UsersService } from '../users/users.service';
@@ -70,15 +71,10 @@ export class AuthService {
     );
 
     if (existingUser) {
-      throw new BadRequestException(
-        'Este e-mail já está cadastrado.',
-      );
+      throw new BadRequestException('Este e-mail já está cadastrado.');
     }
 
-    const passwordHash = await bcrypt.hash(
-      registerDto.password,
-      10,
-    );
+    const passwordHash = await bcrypt.hash(registerDto.password, 10);
 
     const user = await this.usersService.createWithPassword({
       ...registerDto,
@@ -94,14 +90,10 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findByEmail(
-      loginDto.email,
-    );
+    const user = await this.usersService.findByEmail(loginDto.email);
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException(
-        'E-mail ou senha inválidos.',
-      );
+      throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
 
     const passwordIsValid = await bcrypt.compare(
@@ -110,9 +102,7 @@ export class AuthService {
     );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException(
-        'E-mail ou senha inválidos.',
-      );
+      throw new UnauthorizedException('E-mail ou senha inválidos.');
     }
 
     this.validateUserStatus(user);
@@ -120,6 +110,56 @@ export class AuthService {
     return {
       user: this.sanitizeUser(user),
       accessToken: this.generateToken(user),
+    };
+  }
+
+  // ROTA TEMPORÁRIA PARA CRIAR O PRIMEIRO ADMIN
+  async createFirstAdmin() {
+    const adminEmail = 'admin@pedal.com';
+    const adminPassword = '123456';
+
+    const existingAdmin = await this.usersService.findByEmail(adminEmail);
+
+    if (existingAdmin) {
+      return {
+        message: 'Admin já existe.',
+        email: adminEmail,
+        password: adminPassword,
+      };
+    }
+
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+    const admin = await this.usersService.createWithPassword({
+      fullName: 'Administrador PEDAL-UFSCar',
+      email: adminEmail,
+      phone: '00000000000',
+      cpf: '00000000000',
+      rg: null,
+      birthDate: new Date('2000-01-01'),
+      birthPlace: 'São Carlos / Brasil',
+      nationality: 'Brasileira',
+      ufscarNumber: 'ADMIN-001',
+      courseOrDepartment: 'Administração do Sistema',
+      address: 'UFSCar',
+      racialIdentity: 'Prefiro não responder',
+      genderIdentity: 'Prefiro não responder',
+      socialClass: 'Prefiro não responder',
+      userType: UserType.ADMIN,
+      status: UserStatus.APPROVED,
+      passwordHash,
+      photoUrl: null,
+      termsAccepted: true,
+      termsAcceptedAt: new Date(),
+      termsVersion: '1.0',
+    });
+
+    return {
+      message: 'Primeiro admin criado com sucesso.',
+      login: {
+        email: admin.email,
+        password: adminPassword,
+      },
     };
   }
 }

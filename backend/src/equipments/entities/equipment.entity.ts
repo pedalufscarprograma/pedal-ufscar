@@ -67,13 +67,6 @@ export class Equipment {
   status!: EquipmentStatus;
 
   @Column({
-    name: 'is_published',
-    type: 'boolean',
-    default: false,
-  })
-  isPublished!: boolean;
-
-  @Column({
     type: 'text',
     nullable: true,
   })

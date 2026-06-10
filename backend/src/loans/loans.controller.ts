@@ -27,14 +27,7 @@ export class LoansController {
     private readonly loansService: LoansService,
   ) {}
 
-  @Roles(
-    UserType.ADMIN,
-    UserType.OPERATOR,
-    UserType.STUDENT,
-    UserType.TEACHER,
-    UserType.STAFF,
-    UserType.OUTSOURCED_WORKER,
-  )
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Post()
   create(
     @Body()

@@ -1443,38 +1443,169 @@ function TermsContent({
         <>
           <div className="max-h-[55vh] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-relaxed text-slate-700">
             <h3 className="text-lg font-black text-slate-900">
-              Termos gerais de uso do serviço PEDAL-UFSCar
+              TERMO DE USO, ADESÃO E RESPONSABILIDADE PARA A UTILIZAÇÃO DO SISTEMADE EMPRÉSTIMO DE BICICLETAS DO "PROJETO DE EDUCAÇÃO AMBIENTAL ELAZER CONSCIENTE" DA UNIVERSIDADE FEDERAL DE SÃO CARLOS (PEDAL-UFSCar)
             </h3>
 
             <p className="mt-4">
-              O serviço PEDAL-UFSCar permite ao usuário aprovado solicitar
-              empréstimo de bicicletas disponíveis, respeitando as regras de
-              uso, retirada, devolução e conservação dos equipamentos.
+              O presente Termo de Uso, Adesão e Responsabilidade para a Utilização do
+              Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar descreve as regras e as
+              condições gerais que serão aplicáveis na utilização do mesmo, com as quais
+              os/as Usuários/as, ao se cadastrarem, deverão ler atentamente e concordar com
+              todo o conteúdo exposto neste formulário, bem como a assinatura na última
+              página. Ao concluir o cadastro o/a Usuário/a receberá junto ao seu endereço
+              eletrônico (e-mail) uma cópia digital do presente Termo de Uso, Adesão e
+              Responsabilidade.
+
+              O Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar é disponibilizado pelo
+              Departamento de Educação Física e Motricidade Humana da Universidade
+              Federal de São Carlos (DEFMH/UFSCar), situado na Rodovia Washington Luiz, km
+              235, Monjolinho – São Carlos – SP.
+              Telefone: (16) 3351-8294.
+              WhatsApp: (16) 97406-5222
+
+              A pessoa interessada em aderir ao referido Sistema de Empréstimo de Bicicletas
+              do PEDAL-UFSCar deverá realizar seu cadastro presencialmente, junto à sede do
+              PEDAL-UFSCar que se encontra na área sul da UFSCar, conforme localizador:
+              https://maps.app.goo.gl/bCQofwrbmTxQcqKF7
+              Para tal deverá portar os seguintes documentos originais:
+              ✓ Registro Geral (RG) ou Carteira de Identidade Nacional (CIN);
+              ✓ Registro Acadêmico – RA (para Estudantes) ou Identidade Funcional (para
+              Servidores/as) ou último Contracheque/Holerite (para Trabalhadores/as
+              Terceirizados/as);
+
+              ✓ Comprovante de Endereço (conta de água, luz, telefone, contrato de aluguel,
+              declaração de moradia UFSCar e congêneres) do último mês contendo o nome
+              do/a Usuário/a interessado/a na adesão ao Sistema de Empréstimo de Bicicletas
+              do PEDAL-UFSCar.
             </p>
 
             <p className="mt-4">
-              O usuário compromete-se a utilizar a bicicleta com cuidado,
-              responsabilidade e finalidade adequada, preservando o patrimônio
-              institucional e respeitando os prazos definidos pelo sistema.
+              O/A Usuário/a declara e obriga-se nos seguintes termos e condições:
+
+              1. ADESÃO E CADASTRO
+              1.1. O/A Usuário/a declara que leu e concordou expressamente com esta versão
+              em vigor do Termo de Uso, Adesão e Responsabilidade para a Utilização do
+              Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar, o que vincula
+              imediatamente o/a Usuário/a às regras contidas neste documento.
+              
+              1.2. Para a utilização do Termo de Uso, Adesão e Responsabilidade para a
+              Utilização do Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar, o/a
+              Usuário/a deverá pertencer à comunidade acadêmica da UFSCar (Estudante ou
+              Servidor/a ou Terceirizado/a), portar número de matrícula ou identificação
+              vinculada à UFSCar, e estar cadastrado no Sistema como um/a Usuário/a regular.
+              
+              1.3. Com vistas à utilização do referido serviço, de acordo com este Termo de
+              Uso, Adesão e Responsabilidade para a Utilização do Sistema de Empréstimo de
+              Bicicletas do PEDAL-UFSCar, o/a Usuário/a se obriga a fornecer, quando do seu
+              registro, informações pessoais verdadeiras e atuais, sendo que o/a mesmo
+              Usuário/a desde logo autoriza a manutenção dessas informações em nosso
+              banco de dados do sistema, ao mesmo tempo que o Sistema garante o uso
+              exclusivamente para controle de adesão e prestação do serviço de empréstimo
+              de bicicletas, capacetes e travas. Explicitamos que o/a Usuário/a do PEDALUFSCar
+              tem o direito de revogar a autorização de uso dos dados, em qualquer
+              momento, a partir do contato com o PEDAL-UFSCar, conforme Lei Geral de
+              Proteção aos Dados (LGPD).
+              
+              1.4. A utilização dos serviços de empréstimo de bicicletas poderá ser suspensa
+              caso se verifique, por quaisquer meios, que as informações prestadas pelo/a
+              Usuário/a são falsas, independentemente de notificação prévia ao/a Usuário/a.
             </p>
 
             <p className="mt-4">
-              O usuário deve devolver a bicicleta dentro do prazo informado.
-              Atrasos, danos, perda, furto ou uso indevido poderão gerar
-              bloqueio, suspensão ou análise administrativa pela equipe
-              responsável.
+              2. DA RESPONSABILIDADE
+
+              2.1. O/A Usuário/a declara, reconhece e aceita como de sua responsabilidade erisco de utilizar a bicicleta, declarando, ainda, que está livre e desimpedido paraparticipar voluntariamente dessa atividade.
+              2.2. O/A Usuário/a se compromete a tomar o devido cuidado durante autilização, participação, uso e/ou operação da bicicleta. Ainda reconhece,compreende e tem consciência de todos os riscos que se relacionam ao uso dabicicleta, e compreende que ciclismo pode envolver riscos tanto ao/à Usuário/a,como a terceiros, podendo ocasionar ferimento corporal, inabilidade parcial outotal, paralisia ou morte, responsabilizando-se integralmente pelo uso dabicicleta.
+              2.3. O/A Usuário/a declara ser um/a operador/a apto/a de bicicleta e que estápreparado/a fi sicamente para montar e conduzir a bicicleta com destreza ehabilidade, bem como responsabilizar-se pelo seu uso.
+              2.4. O/A usuário/a declara que conhece os riscos e perigos de se locomover debicicleta em zona urbana e rural, bem como, tem plena ciência que deverácumprir todas as regras de trânsito vigentes, a exemplo das seguintes:
+              I - Nas vias urbanas e nas rurais de pista dupla, a circulação de bicicletas deveráocorrer, quando não houver ciclovia, ciclofaixa, ou acostamento, ou ainda quandonão for possível a utilização desses, nos bordos da pista de rolamento, nomesmo sentido de circulação regulamentado para a via, com preferência sobreos veículos automotores;
+              II - Será responsável pelas infrações previstas nalegislação vigente, tais como conduzir bicicleta em passeios/calçadas onde nãoseja permitida a circulação pilotando a bicicleta, conforme disposto art. 59 doCódigo de Trânsito Brasileiro (CTB).
+              2.5. O/A Usuário/a tem pleno conhecimento de que capacete de ciclismo é umequipamento de proteção individual fornecido pelo Sistema, e seu usoexpressamente recomendado. Os danos e acidentes ocasionados pelo usoindevido, ou ainda, pela não utilização do capacete, são de inteiraresponsabilidade do/a Usuário/a. Compreende ainda que mesmo a utilização detal equipamento não elimina o risco de ferimento em um eventual acidente.
+              2.6. O/A Usuário/a não deve utilizar a bicicleta se estiver sob o efeito de álcoolou de qualquer outra substância que retire ou diminua a coordenação motora, odiscernimento ou a percepção.
+              2.7. O/A Usuário/a concorda que só fará uso da bicicleta nas vias permitidas enos moldes estabelecidos no Código de Trânsito Brasileiro (CTB) e demais
+              regulamentos não usando a bicicleta para competir, em corridas, em rodovias,através de poças de água, para incômodo de outras pessoas e em toda posiçãoque for proibida ou ilegal, e que não usará a bicicleta para violação da lei e daordem.
+              2.8. O/A Usuário tem plena ciência que:
+              I –  É de sua única e inteira responsabilidade a bicicleta durante sua jornada,SENDO PROIBIDO, EMPRESTAR, LOCAR, DOAR, VENDER E/OU QUALQUER TIPODE ATITUDE VINCULADA A ESSAS AÇÕES;
+              II- A idade mínima para uso da bicicleta é de 18 anos;
+              III – É integral e exclusivamente responsável por quaisquer danos, tais comodanos materiais, pessoais, morais, estéticos, que venha a causar a si ou aterceiros, ou que venha a sofrer em razão de quaisquer eventos ocorridos duranteo uso da bicicleta;
+              IV–  Segundo especifi cações dos fabricantes, as bicicletas fornecidas paraempréstimo são indicadas para Usuários/a de até 100 (cem) kg e com até 2(dois) metros de altura. A carga máxima suportada pelas garupas/bagageirosinstalados é de 15kg, NÃO SENDO PERMITIDO TRANSPORTAR PESSOAS OUCARGAS QUE VENHAM EXCEDER ESTE PESO MÁXIMO/PERMITIDO.
+              2.9. O/A Usuário/a declara que está em plenas condições físicas e mentais paradeslocar-se por meio de bicicleta, sendo de sua total responsabilidade qualquerproblema de saúde que eventualmente ocorra durante o percurso. Está ciente deque a UFSCar não tem qualquer responsabilidade sobre seu estado de saúde.
+              2.10 O/A Usuário/a é responsável por qualquer dano que causar aosequipamentos ou a terceiros na utilização do serviço de empréstimo debicicletas realizadas pelo PEDAL-UFSCar.
+              2.11.Todos os/as Usuários/as cadastrados/as autorizam o PEDAL-UFSCar autilizar recursos de envio de mensagens eletrônicas para o endereço do e-maile/ou número do telefone celular do/a Usuário/a, necessários a execução dosserviços contratados e para mensagens relativas ao empréstimo de bicicletas,capacetes e travas, assim como demais ações/atividades do PEDAL-UFSCar.
             </p>
 
             <p className="mt-4">
-              Em caso de roubo, furto ou perda, o usuário deverá comunicar a
-              equipe responsável e apresentar documentação comprobatória quando
-              solicitado.
+              3. EMPRÉSTIMOS E GARANTIA:
+
+              3.1. O/A Usuário/a declara-se ciente de que a bicicleta do sistema não pode sercomercializada e que, ao retirar a bicicleta, realiza um empréstimo e não umaaquisição da mesma.
+              3.2. As bicicletas deverão ser retiradas e devolvidas, EXCLUSIVAMENTE, junto asede do PEDAL-UFSCar,
+                  RESPEITANDO OS DIAS E HORÁRIOS FIXADOS DOREFERIDO LOCAL
+                  , em acordo com a disponibilidade dos recursos humanos(estudante-bolsista e/ou servidores/as) destinados para atuação junto a esteserviço.
+              3.3. No ato do empréstimo, é de responsabilidade do/a Usuário/a observar osequipamentos emprestados (bicicleta, capacete e trava) e comunicar apercepção de qualquer desconformidade/avarias que possa comprometer a suautilização, colocar em risco a integridade/saúde do/a Usuário/a, tais como:corrente folgada, pneus murchos, freios com defeito, dentre outros. Diante depossíveis desconformidades/avarias no equipamento, será verifi cada adisponibilidade de outra bicicleta ou capacete ou trava para empréstimo queesteja em condições adequadas para o uso/empréstimo.
+              3.4. As bicicletas retiradas nas sextas-feiras poderão ser devolvidas até às11h00min da segunda-feira subsequente, sem que haja penalidade para o/aUsuário/a. A mesma regra pode ser aplicada para os feriados nos quais aretirada ocorra no dia que antecede ao feriado, e poderão ser devolvidas até às11h00min do dia útil que sucede o feriado, respeitando o calendário acadêmicoda UFSCar, o calendário municipal de São Carlos, bem como os horários doPEDAL-UFSCar.
+              3.5. O intervalo de espera para realizar novo empréstimo, após ter devolvido umabicicleta, deverá ser de no mínimo 1h30min. tendo em vista a oportunidadedos/as demais Usuários/as também conseguirem ter acesso à uma bicicletadiante da baixa disponibilidade de equipamentos.
+              3.6. Nos dias úteis, as jornadas de utilização de bicicletas não deverão exceder48 horas.
+              3.7. O/A Usuário/a deverá informar à equipe do PEDAL-UFSCar, pessoalmente eno prazo máximo 72h (setenta e duas horas), sempre que ocorrer perda, roubo oufurto da bicicleta ou de outros equipamentos (capacete ou trava) que foramemprestados por nossa equipe, que estava em seu poder.
+              3.8. Caso a bicicleta não seja devolvida no prazo de 72h (setenta e duas horas)após o fechamento da sede do PEDAL-UFSCar, a mesma será considerada
+                  extraviada e será cobrada uma TAXA DE NÃO DEVOLUÇÃO, em parcela única, à
+                  vista, no valor de R$500,00 (quinhentos reais) como forma de reembolso do
+                  equipamento, nas seguintes hipóteses:
+                  a) Extravio não justificado da bicicleta;
+                  b) Caso a bicicleta não seja devolvida na sede do PEDAL-UFSCar dentro do prazo
+                  estabelecido (72h - setenta e duas horas), e/ou seja abandonada pelo/a
+                  Usuário/a, mesmo que avariada;
+                  c) Em caso de furto simples ou qualificado, ou roubo da bicicleta (exceto se
+                  justificar por meio de Boletim de Ocorrência efetuado junto a autoridade policial
+                  competente e o entregar ao PEDAL-UFSCar, no prazo máximo de 72h - setenta e
+                  duas horas).
+                  3.9. O/A Usuário/a deverá manter a bicicleta, o capacete e a trava sob sua guarda
+                  e zelo, a todo o momento, de modo a evitar/inibir furtos, roubos e/ou
+                  apropriações indevidas. Verificada a ocorrência de furtos, roubos e/ou
+                  apropriações indébitas decorrentes do cometimento de negligência ou
+                  imprudência, o/a Usuário/a deverá arcar com os seguintes valores:
+                  I - Bicicleta: R$500,00 (quinhentos reais)
+                  II - Capacete: R$100,00 (cem reais)
+                  III - Trava: R$80,00 (oitenta reais)
+                  IV - Chave da trava: R$50,00 (cinquenta reais)
+                  3.10. Caso a bicicleta ou demais equipamentos venham a ser devolvidos de
+                  modo idêntico ou similar ao PEDAL-UFSCar, não haverá a cobrança das taxas
+                  descritas nos itens “3.8” e “3.9”.
             </p>
 
             <p className="mt-4">
-              Este aceite geral é obrigatório para utilizar o serviço. Depois de
-              aceito, não poderá ser desfeito, exceto pela interrupção do uso do
-              serviço.
+              4. DISPOSIÇÕES GERAIS
+
+              4.1. O presente Termo de Uso, Adesão e Responsabilidade para a Utilização do
+                    Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar entra em vigor no ato do
+                    cadastramento do/a Usuário/a para adesão ao Sistema, e permanecerá em vigor,
+                    por prazo indeterminado, durante todo o período de uso dos equipamentos do
+                    referido Sistema pelo/a Usuário/a.
+                    4.2. A qualquer tempo o/a Usuário/a poderá solicitar o cancelamento do seu
+                    cadastro, desde que quitadas todas as obrigações e responsabilidades
+                    assumidas quando da adesão contempladas neste Termo. Para tanto, deverá
+                    apresentar tal intencionalidade pessoalmente junto a sede do PEDAL-UFSCar, ou
+                    pelo e-mail: pedalufscar2011@gmail.com
+                    4.3. Em razão do interesse público envolvido e de acordo com a disponibilidade
+                    orçamentária e de recursos humanos da UFSCar, o Sistema de Empréstimo de
+                    Bicicletas do PEDAL-UFSCar poderá sofrer alterações, ser reduzido, ampliado,
+                    modificado ou até mesmo extinto. Em qualquer dessas hipóteses, o/a Usuário/a
+                    será comunicado pelos meios disponíveis, entre eles o endereço eletrônico (email)
+                    cadastrado pelo/a Usuário/a ou por meio da página eletrônica (“Site”) do
+                    PEDAL-UFSCar: https://www.educacaofisica.ufscar.br/extensao/projeto-deeducacao-
+                    ambiental-e-lazer-consciente-pedal-consciente
+                    4.4. Ocorrerá a suspensão do/a Usuário/a ao Sistema de Empréstimo de
+                    Bicicletas do PEDAL-UFSCar, ou até mesmo a rescisão imediata do presente
+                    Termo, quando observada qualquer das seguintes situações:
+                    I - descumprimento, pelo/a Usuário/a, de qualquer cláusula disposição prevista
+                    neste Termo de Uso, Adesão e Responsabilidade para a Utilização do Sistema de
+                    Empréstimo de Bicicletas do PEDAL-UFSCar;
+                    II - uso indevido do Sistema de Empréstimo de Bicicletas do PEDAL-UFSCar;
+                    III - não pagamento de qualquer valor devido pelo/a Usuário/a;
+                    IV - por determinação legal ou judicial.
+
+                    5. DO FORO
+
+                    Fica eleito o foro da Comarca da Cidade de São Carlos, Estado de São Paulo,para dirimir eventuais dúvidas ou controvérsias decorrentes do presente Termode Uso, Adesão e Responsabilidade para a Utilização do Sistema de Empréstimode Bicicletas do PEDAL-UFSCar, excluindo-se qualquer outro, por maisprivilegiado que seja.
             </p>
           </div>
 

@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Search,
   ShieldX,
+  UserPlus,
   Users,
   X,
 } from 'lucide-react';
@@ -48,6 +49,26 @@ interface User {
 
 type UserAction = 'approve' | 'suspend' | 'block' | 'cancel';
 
+interface CreateInternalUserForm {
+  fullName: string;
+  email: string;
+  phone: string;
+  cpf: string;
+  rg: string;
+  password: string;
+  userType: 'admin' | 'operator' | 'mechanic';
+}
+
+const initialInternalUserForm: CreateInternalUserForm = {
+  fullName: '',
+  email: '',
+  phone: '',
+  cpf: '',
+  rg: '',
+  password: '',
+  userType: 'operator',
+};
+
 interface SelectedAction {
   user: User;
   action: UserAction;
@@ -68,6 +89,14 @@ export default function UsersPage() {
 
   const [selectedPhotoUrl, setSelectedPhotoUrl] =
     useState<string | null>(null);
+
+  const [showCreateInternalUserModal, setShowCreateInternalUserModal] =
+    useState(false);
+
+  const [creatingInternalUser, setCreatingInternalUser] = useState(false);
+
+  const [internalUserForm, setInternalUserForm] =
+    useState<CreateInternalUserForm>(initialInternalUserForm);
 
   async function loadUsers() {
     try {
@@ -93,6 +122,70 @@ export default function UsersPage() {
 
   function closeActionModal() {
     setSelectedAction(null);
+  }
+
+  function openCreateInternalUserModal() {
+    setInternalUserForm(initialInternalUserForm);
+    setShowCreateInternalUserModal(true);
+  }
+
+  function closeCreateInternalUserModal() {
+    if (creatingInternalUser) return;
+
+    setShowCreateInternalUserModal(false);
+    setInternalUserForm(initialInternalUserForm);
+  }
+
+  function updateInternalUserForm<K extends keyof CreateInternalUserForm>(
+    field: K,
+    value: CreateInternalUserForm[K],
+  ) {
+    setInternalUserForm((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
+  }
+
+  async function handleCreateInternalUser() {
+    if (!internalUserForm.fullName.trim()) {
+      toast.error('Informe o nome completo.');
+      return;
+    }
+
+    if (!internalUserForm.email.trim()) {
+      toast.error('Informe o e-mail.');
+      return;
+    }
+
+    if (!internalUserForm.password.trim()) {
+      toast.error('Informe uma senha provisória.');
+      return;
+    }
+
+    try {
+      setCreatingInternalUser(true);
+
+      await api.post('/users/internal', {
+        fullName: internalUserForm.fullName.trim(),
+        email: internalUserForm.email.trim(),
+        phone: internalUserForm.phone.trim() || null,
+        cpf: internalUserForm.cpf.trim() || null,
+        rg: internalUserForm.rg.trim() || null,
+        password: internalUserForm.password,
+        userType: internalUserForm.userType,
+      });
+
+      toast.success('Usuário interno criado com sucesso!');
+      closeCreateInternalUserModal();
+      await loadUsers();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Erro ao criar usuário interno.',
+      );
+    } finally {
+      setCreatingInternalUser(false);
+    }
   }
 
   async function confirmUserAction() {
@@ -198,6 +291,14 @@ export default function UsersPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={openCreateInternalUserModal}
+              className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-bold text-white shadow-lg shadow-green-950/20 transition hover:bg-green-700"
+            >
+              <UserPlus size={18} />
+              Criar usuário interno
+            </button>
+
             <button
               onClick={handleExportUsers}
               className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white shadow-lg shadow-slate-950/20 transition hover:bg-slate-800"
@@ -392,6 +493,118 @@ export default function UsersPage() {
             </div>
           )}
         </div>
+
+        {showCreateInternalUserModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+            <div className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    Criar usuário interno
+                  </h2>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    Cadastre administradores, operadores ou mecânicos do sistema.
+                  </p>
+                </div>
+
+                <button
+                  onClick={closeCreateInternalUserModal}
+                  disabled={creatingInternalUser}
+                  className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  label="Nome completo"
+                  value={internalUserForm.fullName}
+                  onChange={(value) => updateInternalUserForm('fullName', value)}
+                  placeholder="Ex: Maria Silva"
+                />
+
+                <FormField
+                  label="E-mail"
+                  value={internalUserForm.email}
+                  onChange={(value) => updateInternalUserForm('email', value)}
+                  placeholder="usuario@ufscar.br"
+                  type="email"
+                />
+
+                <FormField
+                  label="Telefone"
+                  value={internalUserForm.phone}
+                  onChange={(value) => updateInternalUserForm('phone', value)}
+                  placeholder="(16) 99999-9999"
+                />
+
+                <FormField
+                  label="CPF"
+                  value={internalUserForm.cpf}
+                  onChange={(value) => updateInternalUserForm('cpf', value)}
+                  placeholder="000.000.000-00"
+                />
+
+                <FormField
+                  label="RG"
+                  value={internalUserForm.rg}
+                  onChange={(value) => updateInternalUserForm('rg', value)}
+                  placeholder="00.000.000-0"
+                />
+
+                <FormField
+                  label="Senha provisória"
+                  value={internalUserForm.password}
+                  onChange={(value) => updateInternalUserForm('password', value)}
+                  placeholder="Digite uma senha provisória"
+                  type="password"
+                />
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-xs font-black uppercase tracking-wide text-slate-500">
+                    Tipo de usuário interno
+                  </label>
+
+                  <select
+                    value={internalUserForm.userType}
+                    onChange={(e) =>
+                      updateInternalUserForm(
+                        'userType',
+                        e.target.value as CreateInternalUserForm['userType'],
+                      )
+                    }
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="operator">Operador</option>
+                    <option value="mechanic">Mecânico</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={closeCreateInternalUserModal}
+                  disabled={creatingInternalUser}
+                  className="rounded-xl bg-slate-100 px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Fechar
+                </button>
+
+                <button
+                  onClick={handleCreateInternalUser}
+                  disabled={creatingInternalUser}
+                  className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-3 font-black text-white shadow-lg shadow-green-950/20 transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <UserPlus size={18} />
+                  {creatingInternalUser ? 'Criando...' : 'Criar usuário'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedDetailsUser && (
           <UserDetailsModal
@@ -632,6 +845,36 @@ function UserDetailsModal({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-black uppercase tracking-wide text-slate-500">
+        {label}
+      </label>
+
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        type={type}
+        className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
     </div>
   );
 }

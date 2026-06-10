@@ -31,6 +31,8 @@ interface Equipment {
   photoUrl: string | null;
   status: string;
   notes: string | null;
+
+  isPublished: boolean;
 }
 
 export default function EquipmentsPage() {
@@ -240,6 +242,40 @@ export default function EquipmentsPage() {
       );
     } finally {
       setSavingEdit(false);
+    }
+  }
+
+  async function publishEquipment(id: string) {
+    try {
+      await api.patch(`/equipments/${id}/publish`);
+
+      toast.success(
+        'Bicicleta publicada com sucesso!',
+      );
+
+      await loadEquipments();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Erro ao publicar bicicleta.',
+      );
+    }
+  }
+
+  async function unpublishEquipment(id: string) {
+    try {
+      await api.patch(`/equipments/${id}/unpublish`);
+
+      toast.success(
+        'Publicação cancelada com sucesso!',
+      );
+
+      await loadEquipments();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Erro ao cancelar publicação.',
+      );
     }
   }
 
@@ -576,6 +612,10 @@ export default function EquipmentsPage() {
                     </th>
 
                     <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
+                      Publicação
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
                       Descrição
                     </th>
 
@@ -630,6 +670,22 @@ export default function EquipmentsPage() {
                         <StatusBadge status={equipment.status} />
                       </td>
 
+                      <td className="px-6 py-5">
+                        {equipment.type === 'bike' ? (
+                          equipment.isPublished ? (
+                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-700">
+                              Publicada
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-700">
+                              Não publicada
+                            </span>
+                          )
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+
                       <td className="px-6 py-5 text-sm text-slate-600">
                         {equipment.description || 'Sem descrição'}
                       </td>
@@ -644,6 +700,31 @@ export default function EquipmentsPage() {
                             <Edit size={16} />
                             Editar
                           </button>
+
+                          {equipment.type === 'bike' &&
+                            equipment.status === 'available' && (
+                              equipment.isPublished ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    unpublishEquipment(equipment.id)
+                                  }
+                                  className="flex items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-orange-700"
+                                >
+                                  Cancelar publicação
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    publishEquipment(equipment.id)
+                                  }
+                                  className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-700"
+                                >
+                                  Publicar
+                                </button>
+                              )
+                            )}
 
                           <button
                             type="button"

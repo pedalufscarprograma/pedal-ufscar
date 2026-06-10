@@ -89,6 +89,10 @@ export class EquipmentsController {
     UserType.ADMIN,
     UserType.OPERATOR,
     UserType.MECHANIC,
+    UserType.STUDENT,
+    UserType.TEACHER,
+    UserType.STAFF,
+    UserType.OUTSOURCED_WORKER,
   )
   @Get('available')
   findAvailable() {
@@ -132,29 +136,17 @@ export class EquipmentsController {
     );
   }
 
-  // ==========================
-  // PUBLICAR BICICLETA
-  // ==========================
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Patch(':id/publish')
-  publish(
-    @Param('id') id: string,
-  ) {
+  publish(@Param('id') id: string) {
     return this.equipmentsService.publish(id);
   }
-
-  // ==========================
-  // CANCELAR PUBLICAÇÃO
-  // ==========================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Patch(':id/unpublish')
-  unpublish(
-    @Param('id') id: string,
-  ) {
+  unpublish(@Param('id') id: string) {
     return this.equipmentsService.unpublish(id);
   }
 }

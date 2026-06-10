@@ -16,6 +16,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
 import { UserType } from './entities/user.entity';
+import { CreateInternalUserDto } from './dto/create-internal-user.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
@@ -31,6 +32,16 @@ export class UsersController {
     createUserDto: CreateUserDto,
   ) {
     return this.usersService.create(createUserDto);
+  }
+
+  
+  @Roles(UserType.ADMIN)
+  @Post('internal')
+  createInternalUser(
+    @Body()
+    dto: CreateInternalUserDto,
+  ) {
+    return this.usersService.createInternalUser(dto);
   }
 
   @Roles(UserType.ADMIN, UserType.OPERATOR)
@@ -86,6 +97,7 @@ export class UsersController {
       body.termsVersion,
     );
   }
+  
 
   @Roles(UserType.ADMIN)
   @Patch(':id/approve')
@@ -110,4 +122,5 @@ export class UsersController {
   cancel(@Param('id') id: string) {
     return this.usersService.cancel(id);
   }
+
 }

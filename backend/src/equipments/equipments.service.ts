@@ -14,6 +14,7 @@ import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import {
   Equipment,
   EquipmentStatus,
+  EquipmentType,
 } from './entities/equipment.entity';
 
 @Injectable()
@@ -41,6 +42,7 @@ export class EquipmentsService {
     const equipment = this.equipmentsRepository.create({
       ...createEquipmentDto,
       status: EquipmentStatus.AVAILABLE,
+      isPublished: false,
     });
 
     const savedEquipment = await this.equipmentsRepository.save(equipment);
@@ -66,7 +68,9 @@ export class EquipmentsService {
   async findAvailable() {
     return this.equipmentsRepository.find({
       where: {
+        type: EquipmentType.BIKE,
         status: EquipmentStatus.AVAILABLE,
+        isPublished: true,
       },
       order: {
         createdAt: 'DESC',
@@ -151,5 +155,57 @@ export class EquipmentsService {
     });
 
     return savedEquipment;
+  }
+
+  async publish(id: string) {
+    const equipment = await this.findOne(id);
+
+    if (equipment.type !== EquipmentType.BIKE) {
+      throw new BadRequestException(
+        'Somente bicicletas podem ser publicadas para empréstimo.',
+      );
+    }
+
+    if (equipment.status !== EquipmentStatus.AVAILABLE) {
+      throw new BadRequestException(
+        'Somente bicicletas disponíveis podem ser publicadas.',
+      );
+    }
+
+    equipment.isPublished = true;
+
+    const savedEquipment = await this.equipmentsRepository.save(equipment);
+
+    await this.auditLogsService.register({
+      action: AuditAction.UPDATE_EQUIPMENT,
+      entity: 'equipments',
+      entityId: savedEquipment.id,
+      description: `Bicicleta publicada: ${savedEquipment.code} — ${savedEquipment.name}`,
+    });
+
+    return {
+      message: 'Bicicleta publicada com sucesso.',
+      equipment: savedEquipment,
+    };
+  }
+
+  async unpublish(id: string) {
+    const equipment = await this.findOne(id);
+
+    equipment.isPublished = false;
+
+    const savedEquipment = await this.equipmentsRepository.save(equipment);
+
+    await this.auditLogsService.register({
+      action: AuditAction.UPDATE_EQUIPMENT,
+      entity: 'equipments',
+      entityId: savedEquipment.id,
+      description: `Publicação cancelada: ${savedEquipment.code} — ${savedEquipment.name}`,
+    });
+
+    return {
+      message: 'Publicação cancelada com sucesso.',
+      equipment: savedEquipment,
+    };
   }
 }

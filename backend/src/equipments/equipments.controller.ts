@@ -131,4 +131,30 @@ export class EquipmentsController {
       body.status,
     );
   }
+
+  // ==========================
+  // PUBLICAR BICICLETA
+  // ==========================
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Patch(':id/publish')
+  publish(
+    @Param('id') id: string,
+  ) {
+    return this.equipmentsService.publish(id);
+  }
+
+  // ==========================
+  // CANCELAR PUBLICAÇÃO
+  // ==========================
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Patch(':id/unpublish')
+  unpublish(
+    @Param('id') id: string,
+  ) {
+    return this.equipmentsService.unpublish(id);
+  }
 }

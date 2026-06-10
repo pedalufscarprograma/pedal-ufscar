@@ -14,7 +14,8 @@ import { AuditAction } from '../audit-logs/entities/audit-log.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 
 import { CreateUserDto } from './dto/create-user.dto';
-import { User, UserStatus } from './entities/user.entity';
+import { User, UserStatus, UserType } from './entities/user.entity';
+import { CreateInternalUserDto } from './dto/create-internal-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -76,6 +77,69 @@ export class UsersService {
       entity: 'users',
       entityId: savedUser.id,
       description: `Usuário cadastrado: ${savedUser.fullName} (${savedUser.email})`,
+    });
+
+    return savedUser;
+  }
+
+  async createInternalUser(dto: CreateInternalUserDto) {
+    const allowedTypes = [
+      UserType.ADMIN,
+      UserType.OPERATOR,
+      UserType.MECHANIC,
+    ];
+
+    if (!allowedTypes.includes(dto.userType)) {
+      throw new BadRequestException(
+        'Somente usuários internos podem ser criados por esta rota.',
+      );
+    }
+
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('Já existe um usuário com este e-mail.');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const user = this.usersRepository.create({
+      fullName: dto.fullName,
+      email: dto.email,
+      phone: dto.phone || null,
+      cpf: dto.cpf || null,
+      rg: dto.rg || null,
+
+      birthDate: null,
+      birthPlace: null,
+      nationality: null,
+
+      ufscarNumber: null,
+      courseOrDepartment: 'Usuário interno do sistema',
+      address: null,
+
+      racialIdentity: null,
+      genderIdentity: null,
+      socialClass: null,
+
+      photoUrl: null,
+      userType: dto.userType,
+      passwordHash,
+      status: UserStatus.APPROVED,
+      termsAccepted: true,
+      termsAcceptedAt: new Date(),
+      termsVersion: '1.0',
+    });
+
+    const savedUser = await this.usersRepository.save(user);
+
+    await this.auditLogsService.register({
+      action: AuditAction.CREATE_USER,
+      entity: 'users',
+      entityId: savedUser.id,
+      description: `Usuário interno criado: ${savedUser.fullName} (${savedUser.email})`,
     });
 
     return savedUser;

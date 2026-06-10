@@ -251,15 +251,11 @@ export default function PublicDashboardPage() {
       const [
         equipmentsResponse,
         requestsResponse,
-        loansResponse,
         notificationsResponse,
-        lostReportsResponse,
       ] = await Promise.all([
-        api.get('/equipments'),
+        api.get('/equipments/available'),
         api.get('/loan-requests'),
-        api.get('/loans'),
         api.get(`/notifications/user/${currentUser.id}`),
-        api.get('/lost-reports'),
       ]);
 
       setEquipments(equipmentsResponse.data);
@@ -271,20 +267,21 @@ export default function PublicDashboardPage() {
         ),
       );
 
-      setLoans(
-        loansResponse.data.filter(
-          (loan: Loan & { user?: User }) =>
-            loan.user?.id === currentUser.id,
+      setLoans([]);
+      setNotifications(notificationsResponse.data);
+      setLostReports([]);
+
+      setEquipments(equipmentsResponse.data);
+
+      setRequests(
+        requestsResponse.data.filter(
+          (request: LoanRequest & { user?: User }) =>
+            request.user?.id === currentUser.id,
         ),
       );
 
       setNotifications(notificationsResponse.data);
-      setLostReports(
-        lostReportsResponse.data.filter(
-          (report: any) =>
-            report.loan?.user?.id === currentUser.id,
-        ),
-      );
+      
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || 'Erro ao carregar dados.',

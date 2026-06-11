@@ -39,12 +39,24 @@ export default function PublicLoginPage() {
         password,
       });
 
+      const loggedUser = response.data.user;
+
       localStorage.setItem('public_access_token', response.data.accessToken);
-      localStorage.setItem('public_user', JSON.stringify(response.data.user));
+      localStorage.setItem('public_user', JSON.stringify(loggedUser));
 
       toast.success('Login realizado com sucesso!');
 
-      navigate(redirectTo);
+      const internalUserTypes = ['admin', 'operator', 'mechanic'];
+
+      if (internalUserTypes.includes(loggedUser.userType)) {
+        localStorage.setItem('@pedal_token', response.data.accessToken);
+        localStorage.setItem('@pedal_user', JSON.stringify(loggedUser));
+
+        navigate('/dashboard');
+        return;
+      }
+
+      navigate('/public/dashboard');
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||

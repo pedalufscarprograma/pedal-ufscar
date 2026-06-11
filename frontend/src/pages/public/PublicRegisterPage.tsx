@@ -150,7 +150,7 @@ export default function PublicRegisterPage() {
     try {
       setLoading(true);
 
-      await api.post('/users', {
+      await api.post('/auth/register', {
         fullName,
         email,
         phone,

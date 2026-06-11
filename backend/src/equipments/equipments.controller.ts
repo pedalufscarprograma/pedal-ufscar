@@ -89,15 +89,19 @@ export class EquipmentsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(
-    UserType.ADMIN,
-    UserType.OPERATOR,
-    UserType.MECHANIC,
-  )
-  @Get('available')
-  findAvailable() {
-    return this.equipmentsService.findAvailable();
-  }
+@Roles(
+  UserType.ADMIN,
+  UserType.OPERATOR,
+  UserType.MECHANIC,
+  UserType.STUDENT,
+  UserType.TEACHER,
+  UserType.STAFF,
+  UserType.OUTSOURCED_WORKER,
+)
+@Get('available')
+findAvailable() {
+  return this.equipmentsService.findAvailable();
+}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(

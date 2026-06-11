@@ -44,6 +44,7 @@ interface Equipment {
   status: string;
   description: string | null;
   photoUrl: string | null;
+  isPublished: boolean;
 }
 
 interface LoanRequest {
@@ -143,7 +144,9 @@ export default function PublicDashboardPage() {
     () =>
       equipments.filter(
         (equipment) =>
-          equipment.type === 'bike' && equipment.status === 'available',
+          equipment.type === 'bike' &&
+          equipment.status === 'available' &&
+          equipment.isPublished === true,
       ),
     [equipments],
   );

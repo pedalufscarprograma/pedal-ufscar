@@ -127,6 +127,15 @@ export default function PublicLoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
 
+          <p className="mt-4 text-center text-sm">
+            <a
+              href="/public/forgot-password"
+              className="font-bold text-indigo-600 hover:text-indigo-700"
+            >
+              Esqueci minha senha
+            </a>
+          </p>
+
           <p className="mt-5 text-center text-sm text-slate-500">
             Ainda não tem cadastro?{' '}
             

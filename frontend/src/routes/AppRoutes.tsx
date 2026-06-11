@@ -21,6 +21,8 @@ import PublicDashboardPage from '../pages/public/PublicDashboardPage';
 import PublicEquipmentPage from '../pages/public/PublicEquipmentPage';
 import LostReportsPage from '../pages/LostReportsPage';
 
+import PublicForgotPasswordPage from '../pages/public/PublicForgotPasswordPage';
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -33,6 +35,10 @@ export function AppRoutes() {
       <Route
         path="/public/login"
         element={<PublicLoginPage />}
+      />
+      <Route
+        path="/public/forgot-password"
+        element={<PublicForgotPasswordPage />}
       />
       <Route
         path="/public/equipment/:id"

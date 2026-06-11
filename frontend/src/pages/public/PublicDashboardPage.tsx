@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import SignatureCanvas from 'react-signature-canvas';
 import { toast } from 'sonner';
+import { TermsOfUse } from '../../components/TermsOfUse';
 
 import {
   Bell,
@@ -1475,42 +1476,7 @@ function TermsContent({
         </div>
       ) : (
         <>
-          <div className="max-h-[55vh] overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-relaxed text-slate-700">
-            <h3 className="text-lg font-black text-slate-900">
-              Termos gerais de uso do serviço PEDAL-UFSCar
-            </h3>
-
-            <p className="mt-4">
-              O serviço PEDAL-UFSCar permite ao usuário aprovado solicitar
-              empréstimo de bicicletas disponíveis, respeitando as regras de
-              uso, retirada, devolução e conservação dos equipamentos.
-            </p>
-
-            <p className="mt-4">
-              O usuário compromete-se a utilizar a bicicleta com cuidado,
-              responsabilidade e finalidade adequada, preservando o patrimônio
-              institucional e respeitando os prazos definidos pelo sistema.
-            </p>
-
-            <p className="mt-4">
-              O usuário deve devolver a bicicleta dentro do prazo informado.
-              Atrasos, danos, perda, furto ou uso indevido poderão gerar
-              bloqueio, suspensão ou análise administrativa pela equipe
-              responsável.
-            </p>
-
-            <p className="mt-4">
-              Em caso de roubo, furto ou perda, o usuário deverá comunicar a
-              equipe responsável e apresentar documentação comprobatória quando
-              solicitado.
-            </p>
-
-            <p className="mt-4">
-              Este aceite geral é obrigatório para utilizar o serviço. Depois de
-              aceito, não poderá ser desfeito, exceto pela interrupção do uso do
-              serviço.
-            </p>
-          </div>
+          <TermsOfUse />
 
           <button
             onClick={onAcceptTerms}

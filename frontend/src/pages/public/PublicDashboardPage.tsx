@@ -525,9 +525,11 @@ export default function PublicDashboardPage() {
     setActiveTab(tab);
     setMobileMenuOpen(false);
 
-    navigate(`/public/dashboard?tab=${tab}`, {
-      replace: false,
-    });
+    window.history.pushState(
+      { tab },
+      '',
+      `/public/dashboard?tab=${tab}`,
+    );
   }
 
   async function handleAcceptServiceTerms() {
@@ -633,20 +635,49 @@ export default function PublicDashboardPage() {
   }
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab') as ActiveTab | null;
+    const currentUser = loadUser();
 
-    if (tab) {
-      setActiveTab(tab);
-    } else {
-      navigate('/public/dashboard?tab=dashboard', {
-        replace: true,
-      });
-    }
+    if (!currentUser) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const tab = (params.get('tab') as ActiveTab | null) || 'dashboard';
+
+    setActiveTab(tab);
+
+    window.history.replaceState(
+      { tab },
+      '',
+      `/public/dashboard?tab=${tab}`,
+    );
 
     loadData();
-  }, [navigate]);
-  
+
+    function handlePopState() {
+      const params = new URLSearchParams(window.location.search);
+      const currentTab =
+        (params.get('tab') as ActiveTab | null) || 'dashboard';
+
+      if (window.location.pathname !== '/public/dashboard') {
+        window.history.pushState(
+          { tab: 'dashboard' },
+          '',
+          '/public/dashboard?tab=dashboard',
+        );
+
+        setActiveTab('dashboard');
+        return;
+      }
+
+      setActiveTab(currentTab);
+    }
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <div className="flex min-h-screen">

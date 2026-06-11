@@ -69,7 +69,7 @@ export class EquipmentsController {
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     return {
       success: true,
-      photoUrl: `http://localhost:3000/uploads/equipments/${file.filename}`,
+      photoUrl: `${process.env.API_URL || 'http://localhost:3000'}/uploads/equipments/${file.filename}`,
     };
   }
 

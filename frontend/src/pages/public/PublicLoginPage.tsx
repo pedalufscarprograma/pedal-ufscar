@@ -52,16 +52,11 @@ export default function PublicLoginPage() {
         localStorage.setItem('@pedal_token', response.data.accessToken);
         localStorage.setItem('@pedal_user', JSON.stringify(loggedUser));
 
-        navigate('/dashboard', {
-          replace: true,
-        });
-
+        navigate('/dashboard');
         return;
       }
 
-      navigate('/public/dashboard?tab=dashboard', {
-        replace: true,
-      });
+      navigate('/public/dashboard');
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||

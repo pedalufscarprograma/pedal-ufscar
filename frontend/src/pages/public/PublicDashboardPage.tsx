@@ -305,8 +305,7 @@ export default function PublicDashboardPage() {
       toast.warning(
         'Você precisa aceitar os termos de uso antes de solicitar bicicleta.',
       );
-
-      setActiveTab('terms');
+      changeTab('terms');
       return;
     }
 
@@ -331,7 +330,7 @@ export default function PublicDashboardPage() {
       });
 
       toast.success('Solicitação enviada com sucesso!');
-      setActiveTab('requests');
+      changeTab('requests');
       await loadData();
     } catch (error: any) {
       toast.error(
@@ -560,7 +559,7 @@ export default function PublicDashboardPage() {
 
       toast.success('Termos de uso aceitos com sucesso!');
 
-      setActiveTab('dashboard');
+      changeTab('dashboard');
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -576,7 +575,7 @@ export default function PublicDashboardPage() {
     setReportType('loss');
     setReportDescription('');
     setReportFile(null);
-    setActiveTab('lostReports');
+    changeTab('lostReports');
   }
 
   async function submitLostReport() {
@@ -783,7 +782,7 @@ export default function PublicDashboardPage() {
                     latestNotifications={notifications.slice(0, 3)}
                     latestRequests={requests.slice(0, 3)}
                     latestLoans={loans.slice(0, 3)}
-                    onChangeTab={setActiveTab}
+                    onChangeTab={changeTab}
                   />
                 )}
 

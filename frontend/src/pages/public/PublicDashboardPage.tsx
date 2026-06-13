@@ -287,7 +287,7 @@ export default function PublicDashboardPage() {
         api.get('/loans'),
         api.get(`/notifications/user/${currentUser.id}`),
         api.get('/lost-reports'),
-        api.get('/loan-renewals'),
+        api.get('/loans/renewals'),
       ]);
 
       setEquipments(equipmentsResponse.data);
@@ -697,8 +697,7 @@ export default function PublicDashboardPage() {
   try {
     setSendingRenewal(true);
 
-    await api.post('/loan-renewals', {
-      loanId: selectedRenewalLoan.id,
+    await api.post(`/loans/${selectedRenewalLoan.id}/request-renewal`, {
       requestedReturnDate: renewalDate,
       requestReason: renewalReason,
     });

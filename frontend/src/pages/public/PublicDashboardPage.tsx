@@ -327,14 +327,9 @@ export default function PublicDashboardPage() {
       ) || 'Deslocamento no campus.';
 
     try {
-      const maxLoanHours = 24;
-      const expectedReturnDate = new Date();
-      expectedReturnDate.setHours(expectedReturnDate.getHours() + maxLoanHours);
-
       await api.post('/loan-requests', {
         userId: user.id,
         equipmentId: equipment.id,
-        expectedReturnDate: expectedReturnDate.toISOString(),
         purpose,
       });
 

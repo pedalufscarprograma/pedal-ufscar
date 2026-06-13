@@ -130,7 +130,7 @@ export default function PublicDashboardPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lostReports, setLostReports] = useState<LostReport[]>([]);
-  const [, setRenewals] = useState<LoanRenewal[]>([]);
+
 
   const [selectedRenewalLoan, setSelectedRenewalLoan] =
     useState<Loan | null>(null);
@@ -280,14 +280,12 @@ export default function PublicDashboardPage() {
         loansResponse,
         notificationsResponse,
         lostReportsResponse,
-        renewalsResponse,
       ] = await Promise.all([
         api.get('/equipments/available'),
         api.get('/loan-requests'),
         api.get('/loans'),
         api.get(`/notifications/user/${currentUser.id}`),
         api.get('/lost-reports'),
-        api.get('/loans/renewals'),
       ]);
 
       setEquipments(equipmentsResponse.data);
@@ -314,12 +312,6 @@ export default function PublicDashboardPage() {
         ),
       );
 
-      setRenewals(
-        renewalsResponse.data.filter(
-          (item: any) =>
-            item.loan?.user?.id === currentUser.id,
-        ),
-      );
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || 'Erro ao carregar dados.',

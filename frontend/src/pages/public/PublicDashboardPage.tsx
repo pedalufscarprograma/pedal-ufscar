@@ -74,15 +74,6 @@ interface Loan {
   signatureImage: string | null;
 }
 
-interface LoanRenewal {
-  id: string;
-  status: string;
-  requestedReturnDate: string;
-  approvedReturnDate: string | null;
-  requestReason: string | null;
-  createdAt: string;
-}
-
 interface Notification {
   id: string;
   title: string;

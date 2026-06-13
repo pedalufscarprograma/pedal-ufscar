@@ -347,9 +347,7 @@ export default function PublicDashboardPage() {
       ) || 'Deslocamento no campus.';
 
     try {
-      const maxLoanHoursResponse = await api.get('/settings/max_loan_hours');
-      const maxLoanHours = Number(maxLoanHoursResponse.data?.value || 24);
-
+      const maxLoanHours = 24;
       const expectedReturnDate = new Date();
       expectedReturnDate.setHours(expectedReturnDate.getHours() + maxLoanHours);
 

@@ -22,6 +22,7 @@ import PublicEquipmentPage from '../pages/public/PublicEquipmentPage';
 import LostReportsPage from '../pages/LostReportsPage';
 
 import PublicForgotPasswordPage from '../pages/public/PublicForgotPasswordPage';
+import LoanRenewalsPage from '../pages/LoanRenewalsPage';
 
 export function AppRoutes() {
   return (
@@ -82,6 +83,15 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <LoansPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/loan-renewals"
+        element={
+          <ProtectedRoute>
+            <LoanRenewalsPage />
           </ProtectedRoute>
         }
       />

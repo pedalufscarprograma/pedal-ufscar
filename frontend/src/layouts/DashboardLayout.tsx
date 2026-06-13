@@ -41,6 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
+  const [pendingRenewalsCount, setPendingRenewalsCount] = useState(0);
 
   function handleLogout() {
     logout();
@@ -49,12 +50,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   async function loadAlerts() {
     try {
-      const [requestsResponse, usersResponse] = await Promise.all([
-        api.get('/loan-requests/pending'),
-        api.get('/users'),
-      ]);
+      const [requestsResponse, usersResponse, renewalsResponse] =
+        await Promise.all([
+          api.get('/loan-requests/pending'),
+          api.get('/users'),
+          api.get('/loans/renewals/pending'),
+        ]);
 
       setPendingRequestsCount(requestsResponse.data.length);
+      setPendingRenewalsCount(renewalsResponse.data.length);
 
       const pendingUsers = usersResponse.data.filter(
         (currentUser: { status: string }) =>
@@ -65,6 +69,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     } catch {
       setPendingRequestsCount(0);
       setPendingUsersCount(0);
+      setPendingRenewalsCount(0);
     }
   }
 
@@ -89,6 +94,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       alertCount: pendingRequestsCount,
     },
     { label: 'Empréstimos', path: '/loans', icon: ClipboardList },
+    {
+      label: 'Renovações', path: '/loan-renewals', icon: CalendarClock, alertCount: pendingRenewalsCount,},
     { label: 'Manutenção', path: '/maintenance', icon: Wrench },
     { label: 'Equipamentos', path: '/equipments', icon: Bike },
     {

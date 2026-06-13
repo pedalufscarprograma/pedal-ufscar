@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 
@@ -76,6 +77,105 @@ export class LoansController {
   findLate() {
     return this.loansService.findLate();
   }
+
+  // ===============================
+  // RENOVAÇÕES DE EMPRÉSTIMO
+  // ===============================
+
+  @Roles(
+    UserType.STUDENT,
+    UserType.TEACHER,
+    UserType.STAFF,
+    UserType.OUTSOURCED_WORKER,
+  )
+  @Post(':id/request-renewal')
+  requestRenewal(
+    @Param('id') loanId: string,
+
+    @Req()
+    req: any,
+
+    @Body()
+    body: {
+      requestedReturnDate: string;
+      requestReason?: string;
+    },
+  ) {
+    return this.loansService.requestRenewal(
+      loanId,
+      req.user.sub,
+      body.requestedReturnDate,
+      body.requestReason,
+    );
+  }
+
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Get('renewals')
+  findRenewalRequests() {
+    return this.loansService.findRenewalRequests();
+  }
+
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Get('renewals/pending')
+  findPendingRenewalRequests() {
+    return this.loansService.findPendingRenewalRequests();
+  }
+
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Get(':id/renewals')
+  findRenewalsByLoan(
+    @Param('id') loanId: string,
+  ) {
+    return this.loansService.findRenewalsByLoan(
+      loanId,
+    );
+  }
+
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Patch('renewals/:id/approve')
+  approveRenewal(
+    @Param('id') renewalId: string,
+
+    @Req()
+    req: any,
+
+    @Body()
+    body: {
+      approvedReturnDate?: string;
+      reviewNotes?: string;
+    },
+  ) {
+    return this.loansService.approveRenewal(
+      renewalId,
+      req.user.sub,
+      body.approvedReturnDate,
+      body.reviewNotes,
+    );
+  }
+
+  @Roles(UserType.ADMIN, UserType.OPERATOR)
+  @Patch('renewals/:id/reject')
+  rejectRenewal(
+    @Param('id') renewalId: string,
+
+    @Req()
+    req: any,
+
+    @Body()
+    body: {
+      reviewNotes?: string;
+    },
+  ) {
+    return this.loansService.rejectRenewal(
+      renewalId,
+      req.user.sub,
+      body.reviewNotes,
+    );
+  }
+
+  // ===============================
+  // FINALIZAÇÃO DE EMPRÉSTIMO
+  // ===============================
 
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Patch(':id/return')

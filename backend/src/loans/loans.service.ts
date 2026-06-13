@@ -13,9 +13,16 @@ import { AuditAction } from '../audit-logs/entities/audit-log.entity';
 import { CreateLoanDto } from './dto/create-loan.dto';
 import { ReturnLoanDto } from './dto/return-loan.dto';
 import { SignLoanTermDto } from './dto/sign-loan-term.dto';
+
 import { Loan, LoanStatus } from './entities/loan.entity';
 
+import {
+  LoanRenewal,
+  LoanRenewalStatus,
+} from './entities/loan-renewal.entity';
+
 import { User, UserStatus } from '../users/entities/user.entity';
+
 import {
   Equipment,
   EquipmentStatus,
@@ -30,6 +37,9 @@ export class LoansService {
   constructor(
     @InjectRepository(Loan)
     private readonly loansRepository: Repository<Loan>,
+
+    @InjectRepository(LoanRenewal)
+    private readonly loanRenewalsRepository: Repository<LoanRenewal>,
 
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -253,7 +263,7 @@ export class LoansService {
     });
   }
 
-  async signTerm(id: string, dto: SignLoanTermDto) {
+    async signTerm(id: string, dto: SignLoanTermDto) {
     const loan = await this.loansRepository.findOne({
       where: { id },
     });
@@ -319,24 +329,16 @@ export class LoansService {
 
     loan.equipment.status = EquipmentStatus.AVAILABLE;
 
-    await this.equipmentsRepository.save(
-      loan.equipment,
-    );
+    await this.equipmentsRepository.save(loan.equipment);
 
     if (loan.helmet) {
       loan.helmet.status = EquipmentStatus.AVAILABLE;
-
-      await this.equipmentsRepository.save(
-        loan.helmet,
-      );
+      await this.equipmentsRepository.save(loan.helmet);
     }
 
     if (loan.lock) {
       loan.lock.status = EquipmentStatus.AVAILABLE;
-
-      await this.equipmentsRepository.save(
-        loan.lock,
-      );
+      await this.equipmentsRepository.save(loan.lock);
     }
 
     const savedLoan = await this.loansRepository.save(loan);
@@ -382,24 +384,16 @@ export class LoansService {
 
     loan.equipment.status = EquipmentStatus.LOST;
 
-    await this.equipmentsRepository.save(
-      loan.equipment,
-    );
+    await this.equipmentsRepository.save(loan.equipment);
 
     if (loan.helmet) {
       loan.helmet.status = EquipmentStatus.LOST;
-
-      await this.equipmentsRepository.save(
-        loan.helmet,
-      );
+      await this.equipmentsRepository.save(loan.helmet);
     }
 
     if (loan.lock) {
       loan.lock.status = EquipmentStatus.LOST;
-
-      await this.equipmentsRepository.save(
-        loan.lock,
-      );
+      await this.equipmentsRepository.save(loan.lock);
     }
 
     const savedLoan = await this.loansRepository.save(loan);
@@ -445,24 +439,16 @@ export class LoansService {
 
     loan.equipment.status = EquipmentStatus.DAMAGED;
 
-    await this.equipmentsRepository.save(
-      loan.equipment,
-    );
+    await this.equipmentsRepository.save(loan.equipment);
 
     if (loan.helmet) {
       loan.helmet.status = EquipmentStatus.DAMAGED;
-
-      await this.equipmentsRepository.save(
-        loan.helmet,
-      );
+      await this.equipmentsRepository.save(loan.helmet);
     }
 
     if (loan.lock) {
       loan.lock.status = EquipmentStatus.DAMAGED;
-
-      await this.equipmentsRepository.save(
-        loan.lock,
-      );
+      await this.equipmentsRepository.save(loan.lock);
     }
 
     const savedLoan = await this.loansRepository.save(loan);
@@ -481,5 +467,248 @@ export class LoansService {
     );
 
     return savedLoan;
+  }
+
+  async requestRenewal(
+    loanId: string,
+    userId: string,
+    requestedReturnDate: string,
+    requestReason?: string,
+  ) {
+    await this.updateLateLoans();
+
+    const loan = await this.loansRepository.findOne({
+      where: { id: loanId },
+    });
+
+    if (!loan) {
+      throw new NotFoundException('Empréstimo não encontrado.');
+    }
+
+    if (loan.user.id !== userId) {
+      throw new BadRequestException(
+        'Você só pode solicitar renovação do seu próprio empréstimo.',
+      );
+    }
+
+    if (loan.status !== LoanStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Somente empréstimos ativos podem ser renovados.',
+      );
+    }
+
+    const requestedDate = new Date(requestedReturnDate);
+
+    if (Number.isNaN(requestedDate.getTime())) {
+      throw new BadRequestException('Data solicitada inválida.');
+    }
+
+    if (requestedDate <= loan.expectedReturnDate) {
+      throw new BadRequestException(
+        'A nova data de devolução deve ser posterior à data atual de devolução.',
+      );
+    }
+
+    const existingPending =
+      await this.loanRenewalsRepository.findOne({
+        where: {
+          loan: { id: loan.id },
+          status: LoanRenewalStatus.PENDING,
+        },
+      });
+
+    if (existingPending) {
+      throw new BadRequestException(
+        'Já existe uma solicitação de renovação pendente para este empréstimo.',
+      );
+    }
+
+    const renewal = this.loanRenewalsRepository.create({
+      loan,
+      requestedBy: loan.user,
+      reviewedBy: null,
+      oldExpectedReturnDate: loan.expectedReturnDate,
+      requestedReturnDate: requestedDate,
+      approvedReturnDate: null,
+      status: LoanRenewalStatus.PENDING,
+      requestReason: requestReason || null,
+      reviewNotes: null,
+      reviewedAt: null,
+    });
+
+    const savedRenewal =
+      await this.loanRenewalsRepository.save(renewal);
+
+    await this.notificationsService.createSuccess(
+      loan.user.id,
+      'Solicitação de renovação enviada',
+      `Sua solicitação de renovação da bicicleta ${loan.equipment.code} foi enviada para análise.`,
+    );
+
+    return savedRenewal;
+  }
+
+  async findRenewalRequests() {
+    return this.loanRenewalsRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  async findPendingRenewalRequests() {
+    return this.loanRenewalsRepository.find({
+      where: {
+        status: LoanRenewalStatus.PENDING,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  async findRenewalsByLoan(loanId: string) {
+    const loan = await this.loansRepository.findOne({
+      where: { id: loanId },
+    });
+
+    if (!loan) {
+      throw new NotFoundException('Empréstimo não encontrado.');
+    }
+
+    return this.loanRenewalsRepository.find({
+      where: {
+        loan: { id: loan.id },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  async approveRenewal(
+    renewalId: string,
+    reviewerId: string,
+    approvedReturnDate?: string,
+    reviewNotes?: string,
+  ) {
+    const renewal = await this.loanRenewalsRepository.findOne({
+      where: { id: renewalId },
+    });
+
+    if (!renewal) {
+      throw new NotFoundException(
+        'Solicitação de renovação não encontrada.',
+      );
+    }
+
+    if (renewal.status !== LoanRenewalStatus.PENDING) {
+      throw new BadRequestException(
+        'Esta solicitação de renovação já foi analisada.',
+      );
+    }
+
+    const reviewer = await this.usersRepository.findOne({
+      where: { id: reviewerId },
+    });
+
+    if (!reviewer) {
+      throw new NotFoundException('Usuário avaliador não encontrado.');
+    }
+
+    const loan = await this.loansRepository.findOne({
+      where: { id: renewal.loan.id },
+    });
+
+    if (!loan) {
+      throw new NotFoundException('Empréstimo não encontrado.');
+    }
+
+    if (loan.status !== LoanStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Somente empréstimos ativos podem ter renovação aprovada.',
+      );
+    }
+
+    const finalReturnDate = approvedReturnDate
+      ? new Date(approvedReturnDate)
+      : renewal.requestedReturnDate;
+
+    if (Number.isNaN(finalReturnDate.getTime())) {
+      throw new BadRequestException('Data aprovada inválida.');
+    }
+
+    if (finalReturnDate <= loan.expectedReturnDate) {
+      throw new BadRequestException(
+        'A nova data aprovada deve ser posterior à data atual de devolução.',
+      );
+    }
+
+    renewal.status = LoanRenewalStatus.APPROVED;
+    renewal.reviewedBy = reviewer;
+    renewal.approvedReturnDate = finalReturnDate;
+    renewal.reviewNotes = reviewNotes || null;
+    renewal.reviewedAt = new Date();
+
+    loan.expectedReturnDate = finalReturnDate;
+
+    await this.loansRepository.save(loan);
+
+    const savedRenewal =
+      await this.loanRenewalsRepository.save(renewal);
+
+    await this.notificationsService.createSuccess(
+      loan.user.id,
+      'Renovação aprovada',
+      `Sua renovação foi aprovada. A nova data de devolução da bicicleta ${loan.equipment.code} é ${finalReturnDate.toLocaleString('pt-BR')}.`,
+    );
+
+    return savedRenewal;
+  }
+
+  async rejectRenewal(
+    renewalId: string,
+    reviewerId: string,
+    reviewNotes?: string,
+  ) {
+    const renewal = await this.loanRenewalsRepository.findOne({
+      where: { id: renewalId },
+    });
+
+    if (!renewal) {
+      throw new NotFoundException(
+        'Solicitação de renovação não encontrada.',
+      );
+    }
+
+    if (renewal.status !== LoanRenewalStatus.PENDING) {
+      throw new BadRequestException(
+        'Esta solicitação de renovação já foi analisada.',
+      );
+    }
+
+    const reviewer = await this.usersRepository.findOne({
+      where: { id: reviewerId },
+    });
+
+    if (!reviewer) {
+      throw new NotFoundException('Usuário avaliador não encontrado.');
+    }
+
+    renewal.status = LoanRenewalStatus.REJECTED;
+    renewal.reviewedBy = reviewer;
+    renewal.reviewNotes = reviewNotes || null;
+    renewal.reviewedAt = new Date();
+
+    const savedRenewal =
+      await this.loanRenewalsRepository.save(renewal);
+
+    await this.notificationsService.createWarning(
+      renewal.requestedBy.id,
+      'Renovação recusada',
+      'Sua solicitação de renovação foi recusada. A devolução deve ocorrer na data originalmente prevista.',
+    );
+
+    return savedRenewal;
   }
 }

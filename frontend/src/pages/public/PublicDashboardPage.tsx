@@ -836,18 +836,7 @@ useEffect(() => {
     userId: user.id,
   });
 
-  socket.on(
-    'notifications.updated',
-    (notification) => {
-      playUserNotificationSound();
-
-      loadData();
-
-      if (notification?.title) {
-        toast.success(notification.title);
-      }
-    },
-  );
+  
 
   socket.on('user.notification.sound', (notification) => {
     playUserNotificationSound();
@@ -858,7 +847,7 @@ useEffect(() => {
   });
 
   return () => {
-    socket.off('notifications.updated');
+    
   
     socket.off('user.notification.sound');
   };

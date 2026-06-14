@@ -83,18 +83,6 @@ export class NotificationsService {
       },
     );
 
-    // Evento específico para tocar som no painel admin.
-    this.realtimeGateway.emitToAdmins(
-      'admin.notification.sound',
-      {
-        title: savedNotification.title,
-        message: savedNotification.message,
-        type: savedNotification.type,
-        userId: user.id,
-      },
-    );
-
-    return savedNotification;
   }
 
   async createInfo(

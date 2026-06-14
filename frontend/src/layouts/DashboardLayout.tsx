@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { socket } from '../realtime/socket';
@@ -105,8 +105,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const hasLoadedOnceRef = useRef(false);
-
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
@@ -143,11 +141,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   function handleRealtimeAlert() {
-    if (hasLoadedOnceRef.current) {
-      playAdminNotificationSound();
-    }
-
     loadAlerts();
+  }
+
+  function handleAdminNotificationSound() {
+    playAdminNotificationSound();
   }
 
   useEffect(() => {
@@ -161,9 +159,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }, []);
 
   useEffect(() => {
-    loadAlerts().finally(() => {
-      hasLoadedOnceRef.current = true;
-    });
+    loadAlerts();
 
     socket.connect();
 
@@ -179,6 +175,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     socket.on('users.updated', handleRealtimeAlert);
     socket.on('loan-requests.updated', handleRealtimeAlert);
 
+    socket.on(
+      'admin.notification.sound',
+      handleAdminNotificationSound,
+    );
+
     const interval = window.setInterval(() => {
       loadAlerts();
     }, 30000);
@@ -188,6 +189,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       socket.off('dashboard.updated', handleRealtimeAlert);
       socket.off('users.updated', handleRealtimeAlert);
       socket.off('loan-requests.updated', handleRealtimeAlert);
+
+      socket.off(
+        'admin.notification.sound',
+        handleAdminNotificationSound,
+      );
+
       window.clearInterval(interval);
     };
   }, [user?.id, user?.userType]);

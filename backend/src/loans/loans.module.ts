@@ -15,6 +15,7 @@ import { LoanRenewal } from './entities/loan-renewal.entity';
 import { User } from '../users/entities/user.entity';
 import { Equipment } from '../equipments/entities/equipment.entity';
 import { Setting } from '../settings/entities/setting.entity';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Setting } from '../settings/entities/setting.entity';
       User,
       Equipment,
       Setting,
+      RealtimeModule
     ]),
     AuditLogsModule,
     NotificationsModule,

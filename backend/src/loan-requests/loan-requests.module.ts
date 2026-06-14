@@ -13,6 +13,7 @@ import { Setting } from '../settings/entities/setting.entity';
 
 import { NotificationsModule } from '../notifications/notifications.module';
 import { OperatingHoursModule } from '../operating-hours/operating-hours.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { OperatingHoursModule } from '../operating-hours/operating-hours.module'
       Equipment,
       Loan,
       Setting,
+      RealtimeModule
     ]),
     NotificationsModule,
     OperatingHoursModule,

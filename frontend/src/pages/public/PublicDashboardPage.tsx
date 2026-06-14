@@ -933,7 +933,7 @@ export default function PublicDashboardPage() {
                 Previsão de devolução
               </p>
               <p className="font-bold text-slate-900">
-                {formatDate(selectedLoan.expectedReturnDate)}
+                {formatReturnWindow(selectedLoan.expectedReturnDate,operatingHours,)}
               </p>
             </div>
 
@@ -1040,7 +1040,7 @@ export default function PublicDashboardPage() {
                 Devolução atual
               </p>
               <p className="font-bold text-slate-900">
-                {formatDate(selectedRenewalLoan.expectedReturnDate)}
+                {formatReturnWindow(selectedRenewalLoan.expectedReturnDate,operatingHours,)}
               </p>
             </div>
 

@@ -119,6 +119,32 @@ Comprometo-me a devolver a bicicleta no prazo previsto e em bom estado de conser
 
 Estou ciente de que danos, perda ou atraso na devolução poderão ser analisados pela equipe responsável pelo PEDAL-UFSCar.`;
 
+function playUserNotificationSound() {
+  try {
+    const audioContext = new AudioContext();
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+
+    gainNode.gain.setValueAtTime(0.07, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioContext.currentTime + 0.35,
+    );
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.35);
+  } catch {
+    // Navegador pode bloquear som antes de interação do usuário.
+  }
+}
+
 export default function PublicDashboardPage() {
   const navigate = useNavigate();
   const signatureRef = useRef<SignatureCanvas | null>(null);
@@ -741,6 +767,7 @@ export default function PublicDashboardPage() {
     });
 
     socket.on('notifications.updated', (notification) => {
+      playUserNotificationSound();
       loadData();
 
       if (notification?.title) {

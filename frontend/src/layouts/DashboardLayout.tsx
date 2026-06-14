@@ -35,6 +35,32 @@ interface MenuItem {
   alertCount?: number;
 }
 
+function playAdminNotificationSound() {
+  try {
+    const audioContext = new AudioContext();
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.001,
+      audioContext.currentTime + 0.35,
+    );
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.35);
+  } catch {
+    // Alguns navegadores bloqueiam som antes da interação do usuário.
+  }
+}
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -95,10 +121,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     });
 
     socket.on('users.updated', () => {
+      playAdminNotificationSound();
       loadAlerts();
     });
 
     socket.on('loan-requests.updated', () => {
+      playAdminNotificationSound();
       loadAlerts();
     });
 

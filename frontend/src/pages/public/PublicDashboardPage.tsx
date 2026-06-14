@@ -836,27 +836,28 @@ useEffect(() => {
     userId: user.id,
   });
 
-  socket.on(
-    'notifications.updated',
-    (notification) => {
-      playUserNotificationSound();
-
-      loadData();
-
-      if (notification?.title) {
-        toast.success(notification.title);
-      }
-    },
-  );
+  socket.on('notifications.updated', () => {
+    loadData();
+  });
 
   socket.on('dashboard.updated', () => {
     loadData();
   });
 
+  socket.on('user.notification.sound', (notification) => {
+    playUserNotificationSound();
+
+    if (notification?.title) {
+      toast.success(notification.title);
+    }
+
+    loadData();
+  });
 
   return () => {
     socket.off('notifications.updated');
     socket.off('dashboard.updated');
+    socket.off('user.notification.sound');
   };
 }, [user]);
 

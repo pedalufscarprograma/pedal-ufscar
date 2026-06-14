@@ -849,10 +849,6 @@ useEffect(() => {
     },
   );
 
-  socket.on('dashboard.updated', () => {
-    loadData();
-  });
-
   socket.on('user.notification.sound', (notification) => {
     playUserNotificationSound();
 
@@ -863,7 +859,7 @@ useEffect(() => {
 
   return () => {
     socket.off('notifications.updated');
-    socket.off('dashboard.updated');
+  
     socket.off('user.notification.sound');
   };
 }, [user]);

@@ -121,28 +121,47 @@ Estou ciente de que danos, perda ou atraso na devolução poderão ser analisado
 
 function playUserNotificationSound() {
   try {
-    const audioContext = new AudioContext(); audioContext.resume();
+    if ('vibrate' in navigator) {
+      navigator.vibrate([250, 120, 250]);
+    }
 
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    const audioContext = new AudioContext();
+    audioContext.resume();
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+    function beep(
+      frequency: number,
+      startTime: number,
+      duration: number,
+    ) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
 
-    gainNode.gain.setValueAtTime(0.07, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.001,
-      audioContext.currentTime + 0.35,
-    );
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        audioContext.currentTime + startTime,
+      );
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+      gainNode.gain.setValueAtTime(
+        0.28,
+        audioContext.currentTime + startTime,
+      );
 
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.35);
-  } catch {
-    // Navegador pode bloquear som antes de interação do usuário.
-  }
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + startTime + duration,
+      );
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(audioContext.currentTime + startTime);
+      oscillator.stop(audioContext.currentTime + startTime + duration);
+    }
+
+    beep(880, 0, 0.25);
+    beep(1200, 0.28, 0.32);
+  } catch {}
 }
 
 let audioUnlocked = false;

@@ -1615,12 +1615,12 @@ function TermsContent({
       <SectionHeader
         icon={FileText}
         title="Termos de Uso do PEDAL-UFSCar"
-        subtitle="Leia atentamente antes de utilizar o serviço"
+        subtitle="Leia sempre que precisar consultar as regras do serviço"
         color="blue"
       />
 
-      {user?.termsAccepted ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+      {user?.termsAccepted && (
+        <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-5">
           <p className="font-black text-green-800">
             Você já aceitou os termos de uso.
           </p>
@@ -1636,20 +1636,20 @@ function TermsContent({
             Versão: {user.termsVersion || '1.0'}
           </p>
         </div>
-      ) : (
-        <>
-          <TermsOfUse />
+      )}
 
-          <button
-            onClick={onAcceptTerms}
-            disabled={acceptingTerms}
-            className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {acceptingTerms
-              ? 'Salvando aceite...'
-              : 'Li e concordo com os termos de uso'}
-          </button>
-        </>
+      <TermsOfUse />
+
+      {!user?.termsAccepted && (
+        <button
+          onClick={onAcceptTerms}
+          disabled={acceptingTerms}
+          className="mt-6 w-full rounded-xl bg-blue-600 px-5 py-3 font-black text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {acceptingTerms
+            ? 'Salvando aceite...'
+            : 'Li e concordo com os termos de uso'}
+        </button>
       )}
     </section>
   );

@@ -58,6 +58,17 @@ export class NotificationsService {
       savedNotification,
     );
 
+    // Evento específico para tocar som/vibrar no portal do usuário.
+    this.realtimeGateway.emitToUser(
+      user.id,
+      'user.notification.sound',
+      {
+        title: savedNotification.title,
+        message: savedNotification.message,
+        type: savedNotification.type,
+      },
+    );
+
     // Atualiza contadores/listas do painel admin, sem necessariamente tocar som.
     this.realtimeGateway.emitToAdmins(
       'notifications.updated',

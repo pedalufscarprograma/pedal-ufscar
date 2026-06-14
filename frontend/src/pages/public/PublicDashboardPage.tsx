@@ -853,13 +853,6 @@ useEffect(() => {
     loadData();
   });
 
-  socket.on('user.notification.sound', (notification) => {
-    playUserNotificationSound();
-
-    if (notification?.title) {
-      toast.success(notification.title);
-    }
-  });
 
   return () => {
     socket.off('notifications.updated');

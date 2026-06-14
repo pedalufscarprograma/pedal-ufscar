@@ -12,6 +12,7 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction } from '../audit-logs/entities/audit-log.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserStatus, UserType } from './entities/user.entity';
@@ -34,7 +35,26 @@ export class UsersService {
     private readonly auditLogsService: AuditLogsService,
 
     private readonly notificationsService: NotificationsService,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
+
+  private notifyAdminsAboutUserRequest(payload?: any) {
+    this.realtimeGateway.emitToAdmins('users.updated', payload || {});
+
+    this.realtimeGateway.emitToAdmins('admin.notification.sound', {
+      type: 'user_registered',
+      title: 'Novo cadastro recebido',
+    });
+  }
+
+  private notifyUserAboutAdminDecision(userId: string, payload?: any) {
+    this.realtimeGateway.emitToUser(
+      userId,
+      'user.notification.sound',
+      payload || {},
+    );
+  }
 
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.usersRepository.findOne({
@@ -73,8 +93,6 @@ export class UsersService {
       genderIdentity: createUserDto.genderIdentity || null,
       socialClass: createUserDto.socialClass || null,
 
-
-
       photoUrl: createUserDto.photoUrl || null,
       userType: createUserDto.userType,
       passwordHash,
@@ -91,6 +109,12 @@ export class UsersService {
       entity: 'users',
       entityId: savedUser.id,
       description: `Usuário cadastrado: ${savedUser.fullName} (${savedUser.email})`,
+    });
+
+    this.notifyAdminsAboutUserRequest({
+      source: 'users',
+      userId: savedUser.id,
+      title: 'Novo cadastro recebido',
     });
 
     return savedUser;
@@ -139,8 +163,6 @@ export class UsersService {
       genderIdentity: null,
       socialClass: null,
 
-
-
       photoUrl: null,
       userType: dto.userType,
       passwordHash,
@@ -172,6 +194,12 @@ export class UsersService {
       entity: 'users',
       entityId: savedUser.id,
       description: `Usuário criado com senha: ${savedUser.fullName} (${savedUser.email})`,
+    });
+
+    this.notifyAdminsAboutUserRequest({
+      source: 'users',
+      userId: savedUser.id,
+      title: 'Novo cadastro recebido',
     });
 
     return savedUser;
@@ -284,6 +312,16 @@ export class UsersService {
       'Seu cadastro foi aprovado. Para solicitar bicicletas, leia e aceite os termos gerais de uso do PEDAL-UFSCar.',
     );
 
+    this.realtimeGateway.emitToAdmins('users.updated', {
+      source: 'users',
+      userId: savedUser.id,
+    });
+
+    this.notifyUserAboutAdminDecision(savedUser.id, {
+      type: 'user_approved',
+      title: 'Cadastro aprovado',
+    });
+
     return savedUser;
   }
 
@@ -306,6 +344,16 @@ export class UsersService {
       'Cadastro suspenso',
       'Seu cadastro foi suspenso. Entre em contato com a equipe responsável.',
     );
+
+    this.realtimeGateway.emitToAdmins('users.updated', {
+      source: 'users',
+      userId: savedUser.id,
+    });
+
+    this.notifyUserAboutAdminDecision(savedUser.id, {
+      type: 'user_suspended',
+      title: 'Cadastro suspenso',
+    });
 
     return savedUser;
   }
@@ -330,6 +378,16 @@ export class UsersService {
       'Seu cadastro foi suspenso automaticamente porque a bicicleta não foi devolvida dentro do prazo. Procure a equipe responsável do PEDAL-UFSCar.',
     );
 
+    this.realtimeGateway.emitToAdmins('users.updated', {
+      source: 'users',
+      userId: savedUser.id,
+    });
+
+    this.notifyUserAboutAdminDecision(savedUser.id, {
+      type: 'user_suspended_late_loan',
+      title: 'Cadastro suspenso por atraso',
+    });
+
     return savedUser;
   }
 
@@ -352,6 +410,16 @@ export class UsersService {
       'Cadastro bloqueado',
       'Seu cadastro foi bloqueado. Entre em contato com a equipe responsável.',
     );
+
+    this.realtimeGateway.emitToAdmins('users.updated', {
+      source: 'users',
+      userId: savedUser.id,
+    });
+
+    this.notifyUserAboutAdminDecision(savedUser.id, {
+      type: 'user_blocked',
+      title: 'Cadastro bloqueado',
+    });
 
     return savedUser;
   }
@@ -376,12 +444,18 @@ export class UsersService {
       'Seu cadastro foi cancelado. Entre em contato com a equipe responsável.',
     );
 
+    this.realtimeGateway.emitToAdmins('users.updated', {
+      source: 'users',
+      userId: savedUser.id,
+    });
+
+    this.notifyUserAboutAdminDecision(savedUser.id, {
+      type: 'user_cancelled',
+      title: 'Cadastro cancelado',
+    });
+
     return savedUser;
   }
-
-  // =====================================
-  // DOCUMENTOS DO USUÁRIO
-  // =====================================
 
   async uploadDocument(
     id: string,

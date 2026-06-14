@@ -31,6 +31,7 @@ import {
 import { Setting } from '../settings/entities/setting.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OperatingHoursService } from '../operating-hours/operating-hours.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class LoansService {
@@ -55,6 +56,8 @@ export class LoansService {
     private readonly notificationsService: NotificationsService,
 
     private readonly operatingHoursService: OperatingHoursService,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private async getMaxLoanHours() {
@@ -65,6 +68,32 @@ export class LoansService {
     });
 
     return Number(setting?.value || 24);
+  }
+
+  private notifyAdminsAboutUserRequest(payload?: any) {
+    this.realtimeGateway.emitToAdmins(
+      'loan-renewals.updated',
+      payload || {},
+    );
+
+    this.realtimeGateway.emitToAdmins(
+      'admin.notification.sound',
+      payload || {
+        type: 'renewal_requested',
+        title: 'Nova solicitação de renovação',
+      },
+    );
+  }
+
+  private notifyUserAboutAdminDecision(
+    userId: string,
+    payload?: any,
+  ) {
+    this.realtimeGateway.emitToUser(
+      userId,
+      'user.notification.sound',
+      payload || {},
+    );
   }
 
   async monitorLoans() {
@@ -108,6 +137,11 @@ export class LoansService {
           'Empréstimo atrasado',
           `O prazo de devolução da bicicleta ${loan.equipment.code} expirou.`,
         );
+
+        this.notifyUserAboutAdminDecision(loan.user.id, {
+          type: 'loan_late',
+          title: 'Empréstimo atrasado',
+        });
       }
 
       if (
@@ -125,6 +159,11 @@ export class LoansService {
           'Cadastro suspenso',
           'Seu cadastro foi suspenso devido a atraso superior a 3 dias na devolução da bicicleta.',
         );
+
+        this.notifyUserAboutAdminDecision(loan.user.id, {
+          type: 'user_suspended_late_loan',
+          title: 'Cadastro suspenso por atraso',
+        });
       }
     }
   }
@@ -263,7 +302,7 @@ export class LoansService {
     });
   }
 
-    async signTerm(id: string, dto: SignLoanTermDto) {
+  async signTerm(id: string, dto: SignLoanTermDto) {
     const loan = await this.loansRepository.findOne({
       where: { id },
     });
@@ -272,7 +311,10 @@ export class LoansService {
       throw new NotFoundException('Empréstimo não encontrado.');
     }
 
-    if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.LATE) {
+    if (
+      loan.status !== LoanStatus.ACTIVE &&
+      loan.status !== LoanStatus.LATE
+    ) {
       throw new BadRequestException(
         'Não é possível assinar termo de um empréstimo finalizado.',
       );
@@ -292,7 +334,8 @@ export class LoansService {
 
     loan.responsibilityTermAccepted = true;
     loan.responsibilityTermAcceptedAt = new Date();
-    loan.responsibilityTermText = dto.responsibilityTermText || null;
+    loan.responsibilityTermText =
+      dto.responsibilityTermText || null;
     loan.signatureImage = dto.signatureImage;
 
     const savedLoan = await this.loansRepository.save(loan);
@@ -318,14 +361,20 @@ export class LoansService {
       throw new NotFoundException('Empréstimo não encontrado.');
     }
 
-    if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.LATE) {
-      throw new BadRequestException('Este empréstimo já foi finalizado.');
+    if (
+      loan.status !== LoanStatus.ACTIVE &&
+      loan.status !== LoanStatus.LATE
+    ) {
+      throw new BadRequestException(
+        'Este empréstimo já foi finalizado.',
+      );
     }
 
     loan.status = LoanStatus.RETURNED;
     loan.returnDate = new Date();
     loan.returnNotes =
-      returnLoanDto.returnNotes || 'Bicicleta devolvida em bom estado.';
+      returnLoanDto.returnNotes ||
+      'Bicicleta devolvida em bom estado.';
 
     loan.equipment.status = EquipmentStatus.AVAILABLE;
 
@@ -370,7 +419,10 @@ export class LoansService {
       throw new NotFoundException('Empréstimo não encontrado.');
     }
 
-    if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.LATE) {
+    if (
+      loan.status !== LoanStatus.ACTIVE &&
+      loan.status !== LoanStatus.LATE
+    ) {
       throw new BadRequestException(
         'Somente empréstimos ativos ou atrasados podem ser marcados como perdidos.',
       );
@@ -425,7 +477,10 @@ export class LoansService {
       throw new NotFoundException('Empréstimo não encontrado.');
     }
 
-    if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.LATE) {
+    if (
+      loan.status !== LoanStatus.ACTIVE &&
+      loan.status !== LoanStatus.LATE
+    ) {
       throw new BadRequestException(
         'Somente empréstimos ativos ou atrasados podem ser marcados como danificados.',
       );
@@ -469,7 +524,7 @@ export class LoansService {
     return savedLoan;
   }
 
-    async requestRenewal(
+  async requestRenewal(
     loanId: string,
     userId: string,
     requestReason?: string,
@@ -523,11 +578,7 @@ export class LoansService {
       requestedBy: loan.user,
       reviewedBy: null,
       oldExpectedReturnDate: loan.expectedReturnDate,
-
-      // Agora o usuário não escolhe a data.
-      // O sistema calcula automaticamente a possível nova data.
       requestedReturnDate: calculatedReturnDate,
-
       approvedReturnDate: null,
       status: LoanRenewalStatus.PENDING,
       requestReason: requestReason || null,
@@ -543,6 +594,14 @@ export class LoansService {
       'Solicitação de renovação enviada',
       `Sua solicitação de renovação da bicicleta ${loan.equipment.code} foi enviada para análise. Se aprovada, a nova devolução prevista será ${calculatedReturnDate.toLocaleString('pt-BR')}.`,
     );
+
+    this.notifyAdminsAboutUserRequest({
+      type: 'renewal_requested',
+      title: 'Nova solicitação de renovação',
+      renewalId: savedRenewal.id,
+      loanId: loan.id,
+      userId: loan.user.id,
+    });
 
     return savedRenewal;
   }
@@ -585,7 +644,7 @@ export class LoansService {
     });
   }
 
-    async approveRenewal(
+  async approveRenewal(
     renewalId: string,
     reviewerId: string,
     _approvedReturnDate?: string,
@@ -612,7 +671,9 @@ export class LoansService {
     });
 
     if (!reviewer) {
-      throw new NotFoundException('Usuário avaliador não encontrado.');
+      throw new NotFoundException(
+        'Usuário avaliador não encontrado.',
+      );
     }
 
     const loan = await this.loansRepository.findOne({
@@ -665,6 +726,18 @@ export class LoansService {
       `Sua renovação foi aprovada. A nova data de devolução da bicicleta ${loan.equipment.code} é ${finalReturnDate.toLocaleString('pt-BR')}.`,
     );
 
+    this.realtimeGateway.emitToAdmins('loan-renewals.updated', {
+      type: 'renewal_approved',
+      renewalId: savedRenewal.id,
+      loanId: loan.id,
+      userId: loan.user.id,
+    });
+
+    this.notifyUserAboutAdminDecision(loan.user.id, {
+      type: 'renewal_approved',
+      title: 'Renovação aprovada',
+    });
+
     return savedRenewal;
   }
 
@@ -694,7 +767,9 @@ export class LoansService {
     });
 
     if (!reviewer) {
-      throw new NotFoundException('Usuário avaliador não encontrado.');
+      throw new NotFoundException(
+        'Usuário avaliador não encontrado.',
+      );
     }
 
     renewal.status = LoanRenewalStatus.REJECTED;
@@ -709,6 +784,20 @@ export class LoansService {
       renewal.requestedBy.id,
       'Renovação recusada',
       'Sua solicitação de renovação foi recusada. A devolução deve ocorrer na data originalmente prevista.',
+    );
+
+    this.realtimeGateway.emitToAdmins('loan-renewals.updated', {
+      type: 'renewal_rejected',
+      renewalId: savedRenewal.id,
+      userId: renewal.requestedBy.id,
+    });
+
+    this.notifyUserAboutAdminDecision(
+      renewal.requestedBy.id,
+      {
+        type: 'renewal_rejected',
+        title: 'Renovação recusada',
+      },
     );
 
     return savedRenewal;

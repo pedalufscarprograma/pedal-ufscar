@@ -51,25 +51,12 @@ export class NotificationsService {
     const savedNotification =
       await this.notificationsRepository.save(notification);
 
-    // Atualiza a lista de notificações do usuário, sem necessariamente tocar som.
     this.realtimeGateway.emitToUser(
       user.id,
       'notifications.updated',
       savedNotification,
     );
 
-    // Evento específico para tocar som/vibrar no portal do usuário.
-    this.realtimeGateway.emitToUser(
-      user.id,
-      'user.notification.sound',
-      {
-        title: savedNotification.title,
-        message: savedNotification.message,
-        type: savedNotification.type,
-      },
-    );
-
-    // Atualiza contadores/listas do painel admin, sem necessariamente tocar som.
     this.realtimeGateway.emitToAdmins(
       'notifications.updated',
       savedNotification,
@@ -79,17 +66,6 @@ export class NotificationsService {
       'dashboard.updated',
       {
         source: 'notifications',
-        userId: user.id,
-      },
-    );
-
-    // Evento específico para tocar som no painel admin.
-    this.realtimeGateway.emitToAdmins(
-      'admin.notification.sound',
-      {
-        title: savedNotification.title,
-        message: savedNotification.message,
-        type: savedNotification.type,
         userId: user.id,
       },
     );

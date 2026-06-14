@@ -28,6 +28,7 @@ import { Setting } from '../settings/entities/setting.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { OperatingHoursService } from '../operating-hours/operating-hours.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class LoanRequestsService {
@@ -50,6 +51,8 @@ export class LoanRequestsService {
     private readonly notificationsService: NotificationsService,
 
     private readonly operatingHoursService: OperatingHoursService,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private async getMaxLoanHours() {
@@ -62,18 +65,51 @@ export class LoanRequestsService {
     return Number(setting?.value || 24);
   }
 
+  private notifyAdminsAboutUserRequest(payload?: any) {
+    this.realtimeGateway.emitToAdmins(
+      'loan-requests.updated',
+      payload || {},
+    );
+
+    this.realtimeGateway.emitToAdmins(
+      'admin.notification.sound',
+      payload || {
+        type: 'loan_request_created',
+        title: 'Nova solicitação recebida',
+      },
+    );
+  }
+
+  private notifyUserAboutAdminDecision(
+    userId: string,
+    payload?: any,
+  ) {
+    this.realtimeGateway.emitToUser(
+      userId,
+      'user.notification.sound',
+      payload || {},
+    );
+  }
+
   private buildPickupExpiredAt(
     pickupDate: string,
     pickupEndTime: string,
   ) {
-    const [year, month, day] = pickupDate.split('-').map(Number);
-    const [hour, minute] = pickupEndTime.split(':').map(Number);
+    const [year, month, day] = pickupDate
+      .split('-')
+      .map(Number);
+
+    const [hour, minute] = pickupEndTime
+      .split(':')
+      .map(Number);
 
     return new Date(year, month - 1, day, hour, minute, 0, 0);
   }
 
   private buildLocalDateFromDateString(dateText: string) {
-    const [year, month, day] = dateText.split('-').map(Number);
+    const [year, month, day] = dateText
+      .split('-')
+      .map(Number);
 
     return new Date(year, month - 1, day, 12, 0, 0, 0);
   }
@@ -89,7 +125,9 @@ export class LoanRequestsService {
 
     const date =
       typeof pickupDate === 'string'
-        ? this.buildLocalDateFromDateString(pickupDate.split('T')[0])
+        ? this.buildLocalDateFromDateString(
+            pickupDate.split('T')[0],
+          )
         : pickupDate;
 
     const dateText = date.toLocaleDateString('pt-BR', {
@@ -159,6 +197,11 @@ export class LoanRequestsService {
         'Solicitação expirada',
         `Sua solicitação para a bicicleta ${request.equipment.code} — ${request.equipment.name} expirou porque você não compareceu no horário de retirada definido.`,
       );
+
+      this.notifyUserAboutAdminDecision(request.user.id, {
+        type: 'loan_request_expired',
+        title: 'Solicitação expirada',
+      });
     }
   }
 
@@ -242,6 +285,14 @@ export class LoanRequestsService {
       'Solicitação enviada',
       `Sua solicitação para a bicicleta ${equipment.code} — ${equipment.name} foi enviada e está aguardando análise.`,
     );
+
+    this.notifyAdminsAboutUserRequest({
+      type: 'loan_request_created',
+      title: 'Nova solicitação de bicicleta',
+      requestId: savedRequest.id,
+      userId: user.id,
+      equipmentId: equipment.id,
+    });
 
     return savedRequest;
   }
@@ -332,6 +383,20 @@ export class LoanRequestsService {
         `Sua solicitação para a bicicleta ${request.equipment.code} — ${request.equipment.name} foi aprovada. Você pode retirar a bicicleta em ${pickupText}.`,
       );
 
+      this.realtimeGateway.emitToAdmins(
+        'loan-requests.updated',
+        {
+          type: 'loan_request_approved',
+          requestId: savedRequest.id,
+          userId: request.user.id,
+        },
+      );
+
+      this.notifyUserAboutAdminDecision(request.user.id, {
+        type: 'loan_request_approved',
+        title: 'Solicitação aprovada',
+      });
+
       return savedRequest;
     }
 
@@ -348,6 +413,20 @@ export class LoanRequestsService {
       request.adminNotes ||
         `Sua solicitação para a bicicleta ${request.equipment.code} — ${request.equipment.name} foi rejeitada.`,
     );
+
+    this.realtimeGateway.emitToAdmins(
+      'loan-requests.updated',
+      {
+        type: 'loan_request_rejected',
+        requestId: savedRequest.id,
+        userId: request.user.id,
+      },
+    );
+
+    this.notifyUserAboutAdminDecision(request.user.id, {
+      type: 'loan_request_rejected',
+      title: 'Solicitação rejeitada',
+    });
 
     return savedRequest;
   }
@@ -510,6 +589,15 @@ export class LoanRequestsService {
       }A devolução deve ser feita em ${returnWindowText}.`,
     );
 
+    this.realtimeGateway.emitToAdmins(
+      'loan-requests.updated',
+      {
+        type: 'loan_request_converted',
+        requestId: savedRequest.id,
+        userId: request.user.id,
+      },
+    );
+
     return savedRequest;
   }
 
@@ -535,6 +623,15 @@ export class LoanRequestsService {
       request.user.id,
       'Solicitação cancelada',
       `Sua solicitação para a bicicleta ${request.equipment.code} — ${request.equipment.name} foi cancelada.`,
+    );
+
+    this.realtimeGateway.emitToAdmins(
+      'loan-requests.updated',
+      {
+        type: 'loan_request_cancelled',
+        requestId: savedRequest.id,
+        userId: request.user.id,
+      },
     );
 
     return savedRequest;

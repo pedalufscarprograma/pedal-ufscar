@@ -15,6 +15,7 @@ import {
 } from '../equipments/entities/equipment.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 import { CreateLostReportDto } from './dto/create-lost-report.dto';
 import {
@@ -38,7 +39,35 @@ export class LostReportsService {
     private readonly equipmentsRepository: Repository<Equipment>,
 
     private readonly notificationsService: NotificationsService,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
+
+  private notifyAdminsAboutUserReport(payload?: any) {
+    this.realtimeGateway.emitToAdmins(
+      'lost-reports.updated',
+      payload || {},
+    );
+
+    this.realtimeGateway.emitToAdmins(
+      'admin.notification.sound',
+      payload || {
+        type: 'lost_report_created',
+        title: 'Nova ocorrência registrada',
+      },
+    );
+  }
+
+  private notifyUserAboutAdminDecision(
+    userId: string,
+    payload?: any,
+  ) {
+    this.realtimeGateway.emitToUser(
+      userId,
+      'user.notification.sound',
+      payload || {},
+    );
+  }
 
   async create(dto: CreateLostReportDto) {
     const loan = await this.loansRepository.findOne({
@@ -63,7 +92,10 @@ export class LostReportsService {
       );
     }
 
-    if (loan.status !== LoanStatus.ACTIVE && loan.status !== LoanStatus.LATE) {
+    if (
+      loan.status !== LoanStatus.ACTIVE &&
+      loan.status !== LoanStatus.LATE
+    ) {
       throw new BadRequestException(
         'Só é possível registrar ocorrência para empréstimos ativos ou atrasados.',
       );
@@ -79,7 +111,8 @@ export class LostReportsService {
       adminNotes: null,
     });
 
-    const savedReport = await this.lostReportsRepository.save(report);
+    const savedReport =
+      await this.lostReportsRepository.save(report);
 
     loan.status = LoanStatus.LOST;
     loan.returnDate = new Date();
@@ -96,6 +129,14 @@ export class LostReportsService {
       'Ocorrência registrada',
       `Sua ocorrência referente à bicicleta ${loan.equipment.code} — ${loan.equipment.name} foi registrada e será analisada pela equipe responsável.`,
     );
+
+    this.notifyAdminsAboutUserReport({
+      type: 'lost_report_created',
+      title: 'Nova ocorrência registrada',
+      reportId: savedReport.id,
+      userId: user.id,
+      loanId: loan.id,
+    });
 
     return savedReport;
   }
@@ -140,13 +181,25 @@ export class LostReportsService {
     report.adminNotes =
       adminNotes || 'Ocorrência analisada pela equipe responsável.';
 
-    const savedReport = await this.lostReportsRepository.save(report);
+    const savedReport =
+      await this.lostReportsRepository.save(report);
 
     await this.notificationsService.createInfo(
       report.user.id,
       'Ocorrência analisada',
       `Sua ocorrência referente à bicicleta ${report.loan.equipment.code} foi analisada pela equipe responsável.`,
     );
+
+    this.realtimeGateway.emitToAdmins('lost-reports.updated', {
+      type: 'lost_report_reviewed',
+      reportId: savedReport.id,
+      userId: report.user.id,
+    });
+
+    this.notifyUserAboutAdminDecision(report.user.id, {
+      type: 'lost_report_reviewed',
+      title: 'Ocorrência analisada',
+    });
 
     return savedReport;
   }
@@ -158,13 +211,25 @@ export class LostReportsService {
     report.adminNotes =
       adminNotes || 'Ocorrência rejeitada pela equipe responsável.';
 
-    const savedReport = await this.lostReportsRepository.save(report);
+    const savedReport =
+      await this.lostReportsRepository.save(report);
 
     await this.notificationsService.createWarning(
       report.user.id,
       'Ocorrência rejeitada',
       report.adminNotes,
     );
+
+    this.realtimeGateway.emitToAdmins('lost-reports.updated', {
+      type: 'lost_report_rejected',
+      reportId: savedReport.id,
+      userId: report.user.id,
+    });
+
+    this.notifyUserAboutAdminDecision(report.user.id, {
+      type: 'lost_report_rejected',
+      title: 'Ocorrência rejeitada',
+    });
 
     return savedReport;
   }

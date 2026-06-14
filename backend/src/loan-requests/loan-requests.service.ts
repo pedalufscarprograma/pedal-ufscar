@@ -66,21 +66,14 @@ export class LoanRequestsService {
     pickupDate: string,
     pickupEndTime: string,
   ) {
-    const [year, month, day] = pickupDate
-      .split('-')
-      .map(Number);
-
-    const [hour, minute] = pickupEndTime
-      .split(':')
-      .map(Number);
+    const [year, month, day] = pickupDate.split('-').map(Number);
+    const [hour, minute] = pickupEndTime.split(':').map(Number);
 
     return new Date(year, month - 1, day, hour, minute, 0, 0);
   }
 
   private buildLocalDateFromDateString(dateText: string) {
-    const [year, month, day] = dateText
-      .split('-')
-      .map(Number);
+    const [year, month, day] = dateText.split('-').map(Number);
 
     return new Date(year, month - 1, day, 12, 0, 0, 0);
   }
@@ -96,9 +89,7 @@ export class LoanRequestsService {
 
     const date =
       typeof pickupDate === 'string'
-        ? this.buildLocalDateFromDateString(
-            pickupDate.split('T')[0],
-          )
+        ? this.buildLocalDateFromDateString(pickupDate.split('T')[0])
         : pickupDate;
 
     const dateText = date.toLocaleDateString('pt-BR', {
@@ -109,6 +100,34 @@ export class LoanRequestsService {
     });
 
     return `${dateText}, das ${pickupStartTime} às ${pickupEndTime}`;
+  }
+
+  private async formatReturnWindowMessage(returnDate: Date) {
+    const operatingHours = await this.operatingHoursService.findAll();
+
+    const dayOfWeek = returnDate.getDay();
+
+    const operatingHour = operatingHours.find(
+      (hour) => Number(hour.dayOfWeek) === dayOfWeek,
+    );
+
+    const dateText = returnDate.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+    if (
+      !operatingHour ||
+      operatingHour.isOpen !== true ||
+      !operatingHour.openTime ||
+      !operatingHour.closeTime
+    ) {
+      return `${dateText}, dentro do horário de funcionamento do PEDAL-UFSCar`;
+    }
+
+    return `${dateText}, das ${operatingHour.openTime} às ${operatingHour.closeTime}`;
   }
 
   async expireApprovedRequests() {
@@ -206,13 +225,11 @@ export class LoanRequestsService {
     if (equipment.status !== EquipmentStatus.AVAILABLE) {
       throw new BadRequestException('Esta bicicleta não está disponível.');
     }
+
     const request = this.loanRequestsRepository.create({
       user,
       equipment,
-
-      // Data provisória. A data real da devolução será calculada na retirada.
       expectedReturnDate: new Date(),
-
       purpose: dto.purpose || null,
       notes: dto.notes || null,
       status: LoanRequestStatus.PENDING,
@@ -437,6 +454,9 @@ export class LoanRequestsService {
         maxLoanHours,
       );
 
+    const returnWindowText =
+      await this.formatReturnWindowMessage(expectedReturnDate);
+
     const loan = this.loansRepository.create({
       user: request.user,
       equipment,
@@ -471,7 +491,7 @@ export class LoanRequestsService {
     request.status = LoanRequestStatus.CONVERTED_TO_LOAN;
     request.adminNotes =
       request.adminNotes ||
-      `Solicitação convertida em empréstimo após assinatura do termo. Prazo calculado conforme horário de funcionamento do PEDAL-UFSCar.`;
+      'Solicitação convertida em empréstimo após assinatura do termo. Prazo calculado conforme horário de funcionamento do PEDAL-UFSCar.';
 
     const savedRequest = await this.loanRequestsRepository.save(request);
 
@@ -487,9 +507,8 @@ export class LoanRequestsService {
       'Bicicleta retirada',
       `A bicicleta ${equipment.code} — ${equipment.name} foi retirada e o empréstimo está ativo. ${
         accessoriesText ? accessoriesText + '. ' : ''
-      }A devolução deve ser feita no dia ${expectedReturnDate.toLocaleDateString('pt-BR')}, dentro do horário de funcionamento do PEDAL-UFSCar.`,
+      }A devolução deve ser feita em ${returnWindowText}.`,
     );
-    
 
     return savedRequest;
   }

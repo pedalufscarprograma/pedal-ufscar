@@ -121,7 +121,7 @@ Estou ciente de que danos, perda ou atraso na devolução poderão ser analisado
 
 function playUserNotificationSound() {
   try {
-    const audioContext = new AudioContext();
+    const audioContext = new AudioContext(); audioContext.resume();
 
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -143,6 +143,28 @@ function playUserNotificationSound() {
   } catch {
     // Navegador pode bloquear som antes de interação do usuário.
   }
+}
+
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+
+  try {
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.01);
+
+    audioUnlocked = true;
+  } catch {}
 }
 
 export default function PublicDashboardPage() {
@@ -714,76 +736,109 @@ export default function PublicDashboardPage() {
 }
 
   useEffect(() => {
-    const currentUser = loadUser();
+  const currentUser = loadUser();
 
-    if (!currentUser) return;
+  if (!currentUser) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const tab = (params.get('tab') as ActiveTab | null) || 'dashboard';
+  const params = new URLSearchParams(window.location.search);
 
-    setActiveTab(tab);
+  const tab =
+    (params.get('tab') as ActiveTab | null) ||
+    'dashboard';
 
-    window.history.replaceState(
-      { tab },
-      '',
-      `/public/dashboard?tab=${tab}`,
+  setActiveTab(tab);
+
+  window.history.replaceState(
+    { tab },
+    '',
+    `/public/dashboard?tab=${tab}`,
+  );
+
+  loadData();
+
+  window.addEventListener('click', unlockAudio);
+  window.addEventListener('touchstart', unlockAudio);
+
+  function handlePopState() {
+    const params = new URLSearchParams(
+      window.location.search,
     );
 
-    loadData();
+    const currentTab =
+      (params.get('tab') as ActiveTab | null) ||
+      'dashboard';
 
-    function handlePopState() {
-      const params = new URLSearchParams(window.location.search);
-      const currentTab =
-        (params.get('tab') as ActiveTab | null) || 'dashboard';
+    if (
+      window.location.pathname !==
+      '/public/dashboard'
+    ) {
+      window.history.pushState(
+        { tab: 'dashboard' },
+        '',
+        '/public/dashboard?tab=dashboard',
+      );
 
-      if (window.location.pathname !== '/public/dashboard') {
-        window.history.pushState(
-          { tab: 'dashboard' },
-          '',
-          '/public/dashboard?tab=dashboard',
-        );
-
-        setActiveTab('dashboard');
-        return;
-      }
-
-      setActiveTab(currentTab);
+      setActiveTab('dashboard');
+      return;
     }
 
-    window.addEventListener('popstate', handlePopState);
+    setActiveTab(currentTab);
+  }
 
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
+  window.addEventListener(
+    'popstate',
+    handlePopState,
+  );
 
-  useEffect(() => {
-    if (!user) return;
+  return () => {
+    window.removeEventListener(
+      'popstate',
+      handlePopState,
+    );
 
-    socket.connect();
+    window.removeEventListener(
+      'click',
+      unlockAudio,
+    );
 
-    socket.emit('register-user', {
-      userId: user.id,
-    });
+    window.removeEventListener(
+      'touchstart',
+      unlockAudio,
+    );
+  };
+}, []);
 
-    socket.on('notifications.updated', (notification) => {
+useEffect(() => {
+  if (!user) return;
+
+  socket.connect();
+
+  socket.emit('register-user', {
+    userId: user.id,
+  });
+
+  socket.on(
+    'notifications.updated',
+    (notification) => {
       playUserNotificationSound();
+
       loadData();
 
       if (notification?.title) {
         toast.success(notification.title);
       }
-    });
+    },
+  );
 
-    socket.on('dashboard.updated', () => {
-      loadData();
-    });
+  socket.on('dashboard.updated', () => {
+    loadData();
+  });
 
-    return () => {
-      socket.off('notifications.updated');
-      socket.off('dashboard.updated');
-    };
-  }, [user]);
+  return () => {
+    socket.off('notifications.updated');
+    socket.off('dashboard.updated');
+  };
+}, [user]);
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">

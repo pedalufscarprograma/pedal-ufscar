@@ -668,7 +668,7 @@ export default function LoansPage() {
                             <img
                               src={loan.equipment.photoUrl}
                               alt={loan.equipment.name}
-                              className="h-20 w-220 rounded-2xl object-cover"
+                              className="h-20 w-24 rounded-2xl object-cover"
                             />
                           ) : (
                             <div className="flex h-12 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">

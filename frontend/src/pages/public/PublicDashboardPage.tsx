@@ -853,12 +853,10 @@ useEffect(() => {
     loadData();
   });
 
- 
 
   return () => {
     socket.off('notifications.updated');
     socket.off('dashboard.updated');
-   
   };
 }, [user]);
 

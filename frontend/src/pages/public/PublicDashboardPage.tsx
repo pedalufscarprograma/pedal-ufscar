@@ -96,6 +96,13 @@ interface LostReport {
     equipment: Equipment;
   };
 }
+
+interface OperatingHour {
+  dayOfWeek: number;
+  isOpen: boolean;
+  openTime: string | null;
+  closeTime: string | null;
+}
   
 type ActiveTab =
   | 'dashboard'
@@ -121,6 +128,7 @@ export default function PublicDashboardPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [lostReports, setLostReports] = useState<LostReport[]>([]);
+  const [operatingHours, setOperatingHours] = useState<OperatingHour[]>([]);
 
 
   const [selectedRenewalLoan, setSelectedRenewalLoan] =
@@ -268,12 +276,14 @@ export default function PublicDashboardPage() {
         loansResponse,
         notificationsResponse,
         lostReportsResponse,
-      ] = await Promise.all([
+        operatingHoursResponse,
+      ] = await Promise.all([  
         api.get('/equipments/available'),
         api.get('/loan-requests'),
         api.get('/loans'),
         api.get(`/notifications/user/${currentUser.id}`),
         api.get('/lost-reports'),
+        api.get('/operating-hours'),
       ]);
 
       setEquipments(equipmentsResponse.data);
@@ -299,6 +309,7 @@ export default function PublicDashboardPage() {
             report.loan?.user?.id === currentUser.id,
         ),
       );
+      setOperatingHours(operatingHoursResponse.data);
 
     } catch (error: any) {
       toast.error(
@@ -860,9 +871,9 @@ export default function PublicDashboardPage() {
                 )}
 
                 {activeTab === 'loans' && (
-
                   <LoansContent
                     loans={loans}
+                    operatingHours={operatingHours}
                     onOpenSignTerm={openSignTermModal}
                     onOpenRenewal={openRenewalModal}
                   />
@@ -1491,13 +1502,15 @@ function RequestsContent({
     </section>
   );
 }
-
+  
 function LoansContent({
   loans,
+  operatingHours,
   onOpenSignTerm,
   onOpenRenewal,
 }: {
   loans: Loan[];
+  operatingHours: OperatingHour[];
   onOpenSignTerm: (loan: Loan) => void;
   onOpenRenewal: (loan: Loan) => void;
 }) {  
@@ -1531,7 +1544,14 @@ function LoansContent({
                   </p>
 
                   <p className="text-sm text-slate-500">
-                    Previsão: {formatDate(loan.expectedReturnDate)}
+                    Devolução: {formatReturnWindow(
+                      loan.expectedReturnDate,
+                      operatingHours,
+                    )}
+                  </p>
+
+                  <p className="text-sm font-semibold text-blue-700">
+                    Compareça dentro do horário de funcionamento do PEDAL neste dia.
                   </p>
 
                   {loan.responsibilityTermAccepted ? (
@@ -1791,6 +1811,38 @@ function formatDate(value: string) {
     dateStyle: 'short',
     timeStyle: 'short',
   });
+}
+
+function formatReturnWindow(
+  value: string,
+  operatingHours: OperatingHour[],
+) {
+  const date = new Date(value);
+
+  const dayOfWeek = date.getDay();
+
+  const operatingHour = operatingHours.find(
+    (hour) => Number(hour.dayOfWeek) === dayOfWeek,
+  );
+
+  const dateText = date.toLocaleDateString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  if (
+    !operatingHour ||
+    !operatingHour.isOpen ||
+    !operatingHour.openTime ||
+    !operatingHour.closeTime
+  ) {
+    return `${dateText}, dentro do horário definido pelo PEDAL.`;
+  }
+
+  return `${dateText}, das ${operatingHour.openTime} às ${operatingHour.closeTime}`;
 }
 
 function formatDateLocal(value: string) {

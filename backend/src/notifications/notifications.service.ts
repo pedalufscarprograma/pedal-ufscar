@@ -57,6 +57,16 @@ export class NotificationsService {
       savedNotification,
     );
 
+    this.realtimeGateway.emitToUser(
+      user.id,
+      'user.notification.sound',
+      {
+        title: savedNotification.title,
+        message: savedNotification.message,
+        type: savedNotification.type,
+      },
+    );
+
     this.realtimeGateway.emitToAdmins(
       'notifications.updated',
       savedNotification,

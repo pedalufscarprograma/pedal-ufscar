@@ -25,11 +25,12 @@ import { RealtimeModule } from '../realtime/realtime.module';
       User,
       Equipment,
       Setting,
-      RealtimeModule
+      
     ]),
     AuditLogsModule,
     NotificationsModule,
     OperatingHoursModule,
+    RealtimeModule,
   ],
   controllers: [LoansController],
   providers: [

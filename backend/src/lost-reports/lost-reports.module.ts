@@ -19,7 +19,6 @@ import { LostReportsService } from './lost-reports.service';
       Loan,
       User,
       Equipment,
-      RealtimeModule
     ]),
 
     NotificationsModule,

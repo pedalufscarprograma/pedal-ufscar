@@ -23,10 +23,10 @@ import { RealtimeModule } from '../realtime/realtime.module';
       Equipment,
       Loan,
       Setting,
-      RealtimeModule
     ]),
     NotificationsModule,
     OperatingHoursModule,
+    RealtimeModule
   ],
   controllers: [LoanRequestsController],
   providers: [

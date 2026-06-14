@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { NotificationsModule } from '../notifications/notifications.module';
+import { RealtimeModule } from '../realtime/realtime.module';
 
 import { Loan } from '../loans/entities/loan.entity';
 import { User } from '../users/entities/user.entity';
@@ -19,9 +20,15 @@ import { LostReportsService } from './lost-reports.service';
       User,
       Equipment,
     ]),
+
     NotificationsModule,
+    RealtimeModule,
   ],
+
   controllers: [LostReportsController],
+
   providers: [LostReportsService],
+
+  exports: [LostReportsService],
 })
 export class LostReportsModule {}

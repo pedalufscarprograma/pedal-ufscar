@@ -1,4 +1,10 @@
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 import { UserType } from '../../users/entities/user.entity';
 
@@ -36,6 +42,16 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  // NOVO CAMPO
+  @IsOptional()
+  @IsString()
+  racialIdentity?: string;
+
+  // NOVO CAMPO
+  @IsOptional()
+  @IsString()
+  indigenousPeople?: string;
 
   @IsEnum(UserType)
   userType!: UserType;

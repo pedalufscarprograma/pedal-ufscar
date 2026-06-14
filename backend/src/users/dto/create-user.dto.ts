@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -45,6 +46,11 @@ export class CreateUserDto {
   @IsString()
   racialIdentity!: string;
 
+  // NOVO CAMPO
+  @IsOptional()
+  @IsString()
+  indigenousPeople?: string;
+
   @IsString()
   genderIdentity!: string;
 
@@ -54,7 +60,7 @@ export class CreateUserDto {
   @IsString()
   photoUrl!: string;
 
-  // único campo opcional
+  @IsOptional()
   @IsString()
   rg?: string;
 

@@ -66,8 +66,14 @@ export class UsersService {
       address: createUserDto.address || null,
 
       racialIdentity: createUserDto.racialIdentity || null,
+      indigenousPeople:
+        createUserDto.racialIdentity === 'Indígena'
+          ? createUserDto.indigenousPeople || null
+          : null,
       genderIdentity: createUserDto.genderIdentity || null,
       socialClass: createUserDto.socialClass || null,
+
+
 
       photoUrl: createUserDto.photoUrl || null,
       userType: createUserDto.userType,
@@ -129,8 +135,11 @@ export class UsersService {
       address: null,
 
       racialIdentity: null,
+      indigenousPeople: null,
       genderIdentity: null,
       socialClass: null,
+
+
 
       photoUrl: null,
       userType: dto.userType,

@@ -145,6 +145,14 @@ export class User {
   racialIdentity!: string | null;
 
   @Column({
+    name: 'indigenous_people',
+    type: 'varchar',
+    length: 150,
+    nullable: true,
+  })
+  indigenousPeople!: string | null;
+
+  @Column({
     name: 'gender_identity',
     type: 'varchar',
     length: 50,

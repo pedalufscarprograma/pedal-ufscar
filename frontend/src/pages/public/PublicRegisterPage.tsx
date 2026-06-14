@@ -47,6 +47,138 @@ const socialClassOptions = [
   'Prefiro não responder',
 ];
 
+const indigenousPeopleOptions: IndigenousPeopleOption[] = [
+  'Aikanã',
+  'Aikewara',
+  'Akurio',
+  'Amanayé',
+  'Amanayé-Turiwara',
+  'Anacé',
+  'Apalaí',
+  'Apiaká',
+  'Apinajé',
+  'Apurinã',
+  'Aranã',
+  'Arapaso',
+  'Arara',
+  'Arara do Rio Amônia',
+  'Arara do Rio Branco',
+  'Arara Shawãdawa',
+  'Araweté',
+  'Ashaninka',
+  'Asurini do Tocantins',
+  'Asurini do Xingu',
+  'Atikum',
+  'Avá-Canoeiro',
+  'Aweti',
+  'Bakairi',
+  'Banawá',
+  'Baniwa',
+  'Bará',
+  'Barasana',
+  'Baré',
+  'Borari',
+  'Bororo',
+  'Cinta Larga',
+  'Deni',
+  'Desana',
+  'Fulni-ô',
+  'Galibi Marworno',
+  'Gavião',
+  'Guajajara',
+  'Guarani',
+  'Guarani Kaiowá',
+  'Guarani Mbya',
+  'Guarani Ñandeva',
+  'Huni Kuin',
+  'Ianomâmi',
+  'Ingarikó',
+  'Jamamadi',
+  'Javaé',
+  'Jiripancó',
+  'Juma',
+  'Kaapor',
+  'Kadiwéu',
+  'Kaingang',
+  'Kalabaça',
+  'Kalankó',
+  'Kalapalo',
+  'Kamaiurá',
+  'Kanamari',
+  'Kantaruré',
+  'Karajá',
+  'Karapotó',
+  'Karipuna',
+  'Kariri-Xocó',
+  'Karitiana',
+  'Karuazu',
+  'Kassupá',
+  'Katukina',
+  'Kaxarari',
+  'Kaxinawá',
+  'Kayapó',
+  'Kimbres',
+  'Kinikinau',
+  'Kiriri',
+  'Krahô',
+  'Krenak',
+  'Kubeo',
+  'Kuikuro',
+  'Kulina',
+  'Kulina Pano',
+  'Kuripako',
+  'Makuxi',
+  'Manchineri',
+  'Marubo',
+  'Matipu',
+  'Matis',
+  'Matsés',
+  'Munduruku',
+  'Mura',
+  'Nambikwara',
+  'Ofayé',
+  'Pankará',
+  'Pankararu',
+  'Pataxó',
+  'Pataxó Hã-Hã-Hãe',
+  'Potiguara',
+  'Rikbaktsa',
+  'Sateré-Mawé',
+  'Tapajó',
+  'Tapeba',
+  'Tapirapé',
+  'Tariano',
+  'Taurepang',
+  'Tenharim',
+  'Terena',
+  'Ticuna',
+  'Tremembé',
+  'Truká',
+  'Tukano',
+  'Tupinambá',
+  'Tupiniquim',
+  'Tuxá',
+  'Wai Wai',
+  'Wajãpi',
+  'Wapichana',
+  'Warao',
+  'Wari',
+  'Wassu Cocal',
+  'Xavante',
+  'Xerente',
+  'Xetá',
+  'Xikrin',
+  'Xokleng',
+  'Yanomami',
+  'Yawalapiti',
+  'Yawanawá',
+  'Ye’kwana',
+  'Zo’é',
+].map((name) => ({
+  value: name,
+  label: name,
+}));
+
 type DocumentType =
   | 'rg_cin'
   | 'ra_identidade_funcional'
@@ -58,6 +190,11 @@ interface CountryOption {
   label: string;
   flagUrl: string;
   nationality: string;
+}
+
+interface IndigenousPeopleOption {
+  value: string;
+  label: string;
 }
 
 const nationalityMap: Record<string, string> = {
@@ -137,6 +274,8 @@ export default function PublicRegisterPage() {
   const [address, setAddress] = useState('');
 
   const [racialIdentity, setRacialIdentity] = useState('');
+  const [indigenousPeople, setIndigenousPeople] =
+  useState<IndigenousPeopleOption | null>(null);
   const [genderIdentity, setGenderIdentity] = useState('');
   const [socialClass, setSocialClass] = useState('');
 
@@ -290,6 +429,11 @@ export default function PublicRegisterPage() {
       return;
     }
 
+    if (racialIdentity === 'Indígena' && !indigenousPeople) {
+      toast.warning('Selecione o povo indígena ao qual pertence.');
+      return;
+    }
+
     if (password.length < 6) {
       toast.warning('A senha deve ter pelo menos 6 caracteres.');
       return;
@@ -331,6 +475,7 @@ export default function PublicRegisterPage() {
         courseOrDepartment,
         address,
         racialIdentity,
+        indigenousPeople: racialIdentity === 'Indígena'? indigenousPeople?.value: undefined,
         genderIdentity,
         socialClass,
         userType,
@@ -606,12 +751,63 @@ export default function PublicRegisterPage() {
               </div>
             </div>
 
-            <select value={racialIdentity} onChange={(e) => setRacialIdentity(e.target.value)} required className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+            <select
+              value={racialIdentity}
+              onChange={(e) => {
+                setRacialIdentity(e.target.value);
+
+                if (e.target.value !== 'Indígena') {
+                  setIndigenousPeople(null);
+                }
+              }}
+              required
+              className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+            >
               <option value="">Auto identificação racial *</option>
               {racialIdentityOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
+
+            {racialIdentity === 'Indígena' && (
+              <div className="grid gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <label className="text-sm font-bold text-emerald-900">
+                  Qual povo indígena você pertence? *
+                </label>
+
+                <Select
+                  value={indigenousPeople}
+                  onChange={(option) =>
+                    setIndigenousPeople(option as IndigenousPeopleOption | null)
+                  }
+                  options={indigenousPeopleOptions}
+                  placeholder="Digite ou selecione o povo indígena"
+                  isClearable
+                  noOptionsMessage={() => 'Nenhum povo encontrado'}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: 48,
+                      borderRadius: 12,
+                      borderColor: '#a7f3d0',
+                      boxShadow: 'none',
+                      fontSize: 14,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 50,
+                    }),
+                  }}
+                />
+
+                <p className="text-xs font-semibold text-emerald-800">
+                  Comece a digitar para encontrar mais rápido.
+                </p>
+              </div>
+            )}
+
 
             <select value={genderIdentity} onChange={(e) => setGenderIdentity(e.target.value)} required className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
               <option value="">Auto identificação de gênero *</option>

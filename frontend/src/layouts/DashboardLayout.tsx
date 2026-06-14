@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { NavLink, useNavigate } from 'react-router-dom';
 import { socket } from '../realtime/socket';
@@ -35,35 +35,77 @@ interface MenuItem {
   alertCount?: number;
 }
 
-function playAdminNotificationSound() {
+let adminAudioUnlocked = false;
+
+function unlockAdminAudio() {
+  if (adminAudioUnlocked) return;
+
   try {
     const audioContext = new AudioContext();
-
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-
-    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.001,
-      audioContext.currentTime + 0.35,
-    );
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.35);
-  } catch {
-    // Alguns navegadores bloqueiam som antes da interação do usuário.
-  }
+    oscillator.stop(audioContext.currentTime + 0.01);
+
+    adminAudioUnlocked = true;
+  } catch {}
+}
+
+function playAdminNotificationSound() {
+  try {
+    const audioContext = new AudioContext();
+
+    audioContext.resume();
+
+    function beep(
+      frequency: number,
+      startTime: number,
+      duration: number,
+    ) {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'triangle';
+
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        audioContext.currentTime + startTime,
+      );
+
+      gainNode.gain.setValueAtTime(
+        0.45,
+        audioContext.currentTime + startTime,
+      );
+
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + startTime + duration,
+      );
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(audioContext.currentTime + startTime);
+      oscillator.stop(audioContext.currentTime + startTime + duration);
+    }
+
+    beep(900, 0, 0.18);
+    beep(1300, 0.2, 0.18);
+    beep(1600, 0.4, 0.28);
+  } catch {}
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const hasLoadedOnceRef = useRef(false);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
@@ -100,8 +142,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }
 
-  useEffect(() => {
+  function handleRealtimeAlert() {
+    if (hasLoadedOnceRef.current) {
+      playAdminNotificationSound();
+    }
+
     loadAlerts();
+  }
+
+  useEffect(() => {
+    window.addEventListener('click', unlockAdminAudio);
+    window.addEventListener('touchstart', unlockAdminAudio);
+
+    return () => {
+      window.removeEventListener('click', unlockAdminAudio);
+      window.removeEventListener('touchstart', unlockAdminAudio);
+    };
+  }, []);
+
+  useEffect(() => {
+    loadAlerts().finally(() => {
+      hasLoadedOnceRef.current = true;
+    });
 
     socket.connect();
 
@@ -112,33 +174,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       });
     }
 
-    socket.on('notifications.updated', () => {
-      loadAlerts();
-    });
-
-    socket.on('dashboard.updated', () => {
-      loadAlerts();
-    });
-
-    socket.on('users.updated', () => {
-      playAdminNotificationSound();
-      loadAlerts();
-    });
-
-    socket.on('loan-requests.updated', () => {
-      playAdminNotificationSound();
-      loadAlerts();
-    });
+    socket.on('notifications.updated', handleRealtimeAlert);
+    socket.on('dashboard.updated', handleRealtimeAlert);
+    socket.on('users.updated', handleRealtimeAlert);
+    socket.on('loan-requests.updated', handleRealtimeAlert);
 
     const interval = window.setInterval(() => {
       loadAlerts();
     }, 30000);
 
     return () => {
-      socket.off('notifications.updated');
-      socket.off('dashboard.updated');
-      socket.off('users.updated');
-      socket.off('loan-requests.updated');
+      socket.off('notifications.updated', handleRealtimeAlert);
+      socket.off('dashboard.updated', handleRealtimeAlert);
+      socket.off('users.updated', handleRealtimeAlert);
+      socket.off('loan-requests.updated', handleRealtimeAlert);
       window.clearInterval(interval);
     };
   }, [user?.id, user?.userType]);
@@ -153,7 +202,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     },
     { label: 'Empréstimos', path: '/loans', icon: ClipboardList },
     {
-      label: 'Renovações', path: '/loan-renewals', icon: CalendarClock, alertCount: pendingRenewalsCount,},
+      label: 'Renovações',
+      path: '/loan-renewals',
+      icon: CalendarClock,
+      alertCount: pendingRenewalsCount,
+    },
     { label: 'Manutenção', path: '/maintenance', icon: Wrench },
     { label: 'Equipamentos', path: '/equipments', icon: Bike },
     {

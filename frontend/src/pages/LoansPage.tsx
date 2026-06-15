@@ -822,16 +822,13 @@ export default function LoansPage() {
 
         {selectedImage && (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 px-6 py-6 sm:px-10"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
             onClick={() => setSelectedImage(null)}
           >
-            <div
-              className="relative flex max-h-[88vh] w-full max-w-5xl items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="relative max-h-[90vh] max-w-[90vw]">
               <button
                 onClick={() => setSelectedImage(null)}
-                className="absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white shadow-lg"
+                className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white shadow-lg"
               >
                 ×
               </button>
@@ -839,7 +836,7 @@ export default function LoansPage() {
               <img
                 src={selectedImage}
                 alt="Imagem ampliada"
-                className="max-h-[88vh] w-full rounded-2xl object-contain"
+                className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
               />
             </div>
           </div>

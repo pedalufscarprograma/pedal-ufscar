@@ -88,6 +88,7 @@ export default function LoansPage() {
   const [acceptedResponsibilityTerm, setAcceptedResponsibilityTerm] =
     useState(false);
 
+  const [selectedImage, setSelectedImage] = useState<string | null>(null,);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -667,10 +668,14 @@ export default function LoansPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           {loan.equipment?.photoUrl ? (
+                            
                             <img
                               src={loan.equipment.photoUrl}
                               alt={loan.equipment.name}
-                              className="h-20 w-220 rounded-2xl object-cover"
+                              onClick={() =>
+                                setSelectedImage(loan.equipment.photoUrl)
+                              }
+                              className="h-20 w-24 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
                             />
                           ) : (
                             <div className="flex h-12 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
@@ -817,6 +822,28 @@ export default function LoansPage() {
             </div>
           )}
         </div>
+
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="relative max-h-[90vh] max-w-[90vw]">
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white shadow-lg"
+              >
+                ×
+              </button>
+
+              <img
+                src={selectedImage}
+                alt="Imagem ampliada"
+                className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
+              />
+            </div>
+          </div>
+        )}
 
         {selectedTermLoan && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
@@ -981,7 +1008,7 @@ export default function LoansPage() {
           </div>
         )}
 
-                {selectedLoanAction && (
+        {selectedLoanAction && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
             <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
               <div className="mb-5 flex items-start justify-between">

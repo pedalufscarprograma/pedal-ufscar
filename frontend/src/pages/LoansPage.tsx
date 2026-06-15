@@ -603,7 +603,7 @@ export default function LoansPage() {
           ) : (
             
             <div className="w-full overflow-x-auto">
-              <table className="w-full table-fixed border-collapse">
+              <table className="min-w-[1100px] w-full border-collapse">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">

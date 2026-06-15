@@ -345,7 +345,7 @@ export default function UsersPage() {
           </select>
         </div>
 
-        <div className="overflow-hidden rounded-3xl bg-white shadow-lg shadow-slate-200/60">
+        <div className="w-full max-w-full rounded-3xl bg-white shadow-lg shadow-slate-200/60">
           {loading ? (
             <div className="p-8 text-center font-semibold text-slate-500">
               Carregando usuários...
@@ -355,8 +355,8 @@ export default function UsersPage() {
               Nenhum usuário encontrado.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="w-full max-w-full overflow-x-auto">
+              <table className="min-w-[1200px] max-w-full border-collapse">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">

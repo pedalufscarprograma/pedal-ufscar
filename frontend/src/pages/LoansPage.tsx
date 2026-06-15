@@ -668,10 +668,14 @@ export default function LoansPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           {loan.equipment?.photoUrl ? (
+                            
                             <img
                               src={loan.equipment.photoUrl}
                               alt={loan.equipment.name}
-                              className="h-20 w-24 rounded-2xl object-cover"
+                              onClick={() =>
+                                setSelectedImage(loan.equipment.photoUrl)
+                              }
+                              className="h-20 w-24 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
                             />
                             
                           ) : (

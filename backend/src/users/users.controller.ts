@@ -15,6 +15,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { CreateInternalUserDto } from './dto/create-internal-user.dto';
 import { UsersService } from './users.service';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -33,6 +34,12 @@ export class UsersController {
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Roles(UserType.ADMIN)
+  @Post('internal')
+  createInternalUser(@Body() dto: CreateInternalUserDto) {
+    return this.usersService.createInternalUser(dto);
   }
 
   @Roles(UserType.ADMIN, UserType.OPERATOR)
@@ -103,10 +110,6 @@ export class UsersController {
   cancel(@Param('id') id: string) {
     return this.usersService.cancel(id);
   }
-
-  // =====================================
-  // DOCUMENTOS DO USUÁRIO
-  // =====================================
 
   @Roles(
     UserType.STUDENT,

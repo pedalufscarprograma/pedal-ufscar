@@ -824,28 +824,6 @@ export default function LoansPage() {
           )}
         </div>
 
-        {selectedImage && (
-          <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
-            onClick={() => setSelectedImage(null)}
-          >
-            <div className="relative max-h-[90vh] max-w-[90vw]">
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute -right-3 -top-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white shadow-lg"
-              >
-                ×
-              </button>
-
-              <img
-                src={selectedImage}
-                alt="Imagem ampliada"
-                className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
-              />
-            </div>
-          </div>
-        )}
-
         {selectedTermLoan && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
             <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
@@ -1183,9 +1161,32 @@ export default function LoansPage() {
             </div>
           </div>
         )}
+        {selectedImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="fixed right-4 top-4 z-[10000] flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white shadow-lg"
+          >
+            ×
+          </button>
+
+          {selectedImage && (
+            <img
+              src={selectedImage || ''}
+              alt="Imagem ampliada"
+              onClick={(e) => e.stopPropagation()}
+              className="block max-h-[85vh] max-w-[calc(100vw-48px)] rounded-2xl object-contain"
+            />
+          )}
+        </div>
+      )}
       </div>
     </DashboardLayout>
   );
+   
 }
 
 function getActionTitle(action: LoanAction) {

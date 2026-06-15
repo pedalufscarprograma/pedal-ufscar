@@ -675,7 +675,7 @@ export default function LoansPage() {
                               onClick={() =>
                                 setSelectedImage(loan.equipment.photoUrl)
                               }
-                              className="h-20 w-20 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
+                              className="h-16 w-20 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
                             />
                             
                           ) : (

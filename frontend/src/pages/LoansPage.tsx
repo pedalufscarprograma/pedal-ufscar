@@ -603,7 +603,7 @@ export default function LoansPage() {
           ) : (
             
             <div className="w-full overflow-x-auto">
-              <table className="min-w-[1400px] w-full border-collapse">
+              <table className="w-full table-fixed border-collapse">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-wide text-slate-500">
@@ -675,7 +675,7 @@ export default function LoansPage() {
                               onClick={() =>
                                 setSelectedImage(loan.equipment.photoUrl)
                               }
-                              className="h-16 w-20 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
+                              className="h-20 w-24 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
                             />
                             
                           ) : (

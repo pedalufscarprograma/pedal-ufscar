@@ -668,15 +668,12 @@ export default function LoansPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           {loan.equipment?.photoUrl ? (
-                            
                             <img
                               src={loan.equipment.photoUrl}
                               alt={loan.equipment.name}
-                              onClick={() =>
-                                setSelectedImage(loan.equipment.photoUrl)
-                              }
-                              className="h-20 w-24 cursor-pointer rounded-2xl object-cover transition hover:scale-105"
+                              className="h-20 w-24 rounded-2xl object-cover"
                             />
+                            
                           ) : (
                             <div className="flex h-12 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                               <Bike size={22} />
@@ -1008,7 +1005,7 @@ export default function LoansPage() {
           </div>
         )}
 
-        {selectedLoanAction && (
+                {selectedLoanAction && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
             <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
               <div className="mb-5 flex items-start justify-between">

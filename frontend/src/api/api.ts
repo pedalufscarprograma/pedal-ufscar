@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://pedal-ufscar.onrender.com',
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    'https://pedal-ufscar-backend-diug.onrender.com',
 });
 
 api.interceptors.request.use((config) => {

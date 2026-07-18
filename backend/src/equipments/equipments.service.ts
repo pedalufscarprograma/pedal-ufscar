@@ -3,14 +3,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { AuditAction } from '../audit-logs/entities/audit-log.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
+
 import {
   Equipment,
   EquipmentStatus,
@@ -24,14 +26,17 @@ export class EquipmentsService {
     private readonly equipmentsRepository: Repository<Equipment>,
 
     private readonly auditLogsService: AuditLogsService,
+
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async create(createEquipmentDto: CreateEquipmentDto) {
-    const existingEquipment = await this.equipmentsRepository.findOne({
-      where: {
-        code: createEquipmentDto.code,
-      },
-    });
+    const existingEquipment =
+      await this.equipmentsRepository.findOne({
+        where: {
+          code: createEquipmentDto.code,
+        },
+      });
 
     if (existingEquipment) {
       throw new BadRequestException(
@@ -40,12 +45,19 @@ export class EquipmentsService {
     }
 
     const equipment = this.equipmentsRepository.create({
-      ...createEquipmentDto,
+      type: createEquipmentDto.type,
+      code: createEquipmentDto.code,
+      name: createEquipmentDto.name,
+      description: createEquipmentDto.description || null,
+      photoUrl: createEquipmentDto.photoUrl || null,
+      photoPublicId: createEquipmentDto.photoPublicId || null,
+      notes: createEquipmentDto.notes || null,
       status: EquipmentStatus.AVAILABLE,
       isPublished: false,
     });
 
-    const savedEquipment = await this.equipmentsRepository.save(equipment);
+    const savedEquipment =
+      await this.equipmentsRepository.save(equipment);
 
     await this.auditLogsService.register({
       action: AuditAction.CREATE_EQUIPMENT,
@@ -79,56 +91,101 @@ export class EquipmentsService {
   }
 
   async findOne(id: string) {
-    const equipment = await this.equipmentsRepository.findOne({
-      where: { id },
-    });
+    const equipment =
+      await this.equipmentsRepository.findOne({
+        where: { id },
+      });
 
     if (!equipment) {
-      throw new NotFoundException('Equipamento não encontrado.');
+      throw new NotFoundException(
+        'Equipamento não encontrado.',
+      );
     }
 
     return equipment;
   }
 
-  async update(id: string, updateEquipmentDto: Partial<CreateEquipmentDto>) {
+  async update(
+    id: string,
+    updateEquipmentDto: Partial<CreateEquipmentDto>,
+  ) {
     const equipment = await this.findOne(id);
 
     if (
       updateEquipmentDto.code &&
       updateEquipmentDto.code !== equipment.code
     ) {
-      const existingEquipment = await this.equipmentsRepository.findOne({
-        where: {
-          code: updateEquipmentDto.code,
-        },
-      });
+      const existingEquipment =
+        await this.equipmentsRepository.findOne({
+          where: {
+            code: updateEquipmentDto.code,
+          },
+        });
 
-      if (existingEquipment) {
+      if (
+        existingEquipment &&
+        existingEquipment.id !== equipment.id
+      ) {
         throw new BadRequestException(
           'Já existe outro equipamento com este código.',
         );
       }
     }
 
+    const oldPhotoPublicId = equipment.photoPublicId;
+
+    const isReplacingPhoto =
+      updateEquipmentDto.photoPublicId !== undefined &&
+      updateEquipmentDto.photoPublicId !==
+        equipment.photoPublicId;
+
     Object.assign(equipment, {
-      type: updateEquipmentDto.type ?? equipment.type,
-      code: updateEquipmentDto.code ?? equipment.code,
-      name: updateEquipmentDto.name ?? equipment.name,
+      type:
+        updateEquipmentDto.type ??
+        equipment.type,
+
+      code:
+        updateEquipmentDto.code ??
+        equipment.code,
+
+      name:
+        updateEquipmentDto.name ??
+        equipment.name,
+
       description:
         updateEquipmentDto.description !== undefined
           ? updateEquipmentDto.description || null
           : equipment.description,
+
       photoUrl:
         updateEquipmentDto.photoUrl !== undefined
           ? updateEquipmentDto.photoUrl || null
           : equipment.photoUrl,
+
+      photoPublicId:
+        updateEquipmentDto.photoPublicId !== undefined
+          ? updateEquipmentDto.photoPublicId || null
+          : equipment.photoPublicId,
+
       notes:
         updateEquipmentDto.notes !== undefined
           ? updateEquipmentDto.notes || null
           : equipment.notes,
     });
 
-    const savedEquipment = await this.equipmentsRepository.save(equipment);
+    const savedEquipment =
+      await this.equipmentsRepository.save(equipment);
+
+    if (
+      isReplacingPhoto &&
+      oldPhotoPublicId &&
+      oldPhotoPublicId !== savedEquipment.photoPublicId
+    ) {
+      await this.cloudinaryService.deleteFile(
+        oldPhotoPublicId,
+        'image',
+      );
+    }
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_EQUIPMENT,
@@ -140,12 +197,22 @@ export class EquipmentsService {
     return savedEquipment;
   }
 
-  async updateStatus(id: string, status: EquipmentStatus) {
+  async updateStatus(
+    id: string,
+    status: EquipmentStatus,
+  ) {
+    if (!Object.values(EquipmentStatus).includes(status)) {
+      throw new BadRequestException(
+        'Status de equipamento inválido.',
+      );
+    }
+
     const equipment = await this.findOne(id);
 
     equipment.status = status;
 
-    const savedEquipment = await this.equipmentsRepository.save(equipment);
+    const savedEquipment =
+      await this.equipmentsRepository.save(equipment);
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_EQUIPMENT,
@@ -166,7 +233,10 @@ export class EquipmentsService {
       );
     }
 
-    if (equipment.status !== EquipmentStatus.AVAILABLE) {
+    if (
+      equipment.status !==
+      EquipmentStatus.AVAILABLE
+    ) {
       throw new BadRequestException(
         'Somente bicicletas disponíveis podem ser publicadas.',
       );
@@ -174,7 +244,8 @@ export class EquipmentsService {
 
     equipment.isPublished = true;
 
-    const savedEquipment = await this.equipmentsRepository.save(equipment);
+    const savedEquipment =
+      await this.equipmentsRepository.save(equipment);
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_EQUIPMENT,
@@ -194,7 +265,8 @@ export class EquipmentsService {
 
     equipment.isPublished = false;
 
-    const savedEquipment = await this.equipmentsRepository.save(equipment);
+    const savedEquipment =
+      await this.equipmentsRepository.save(equipment);
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_EQUIPMENT,

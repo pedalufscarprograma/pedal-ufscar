@@ -175,6 +175,13 @@ export class User {
   })
   photoUrl!: string | null;
 
+  @Column({
+    name: 'photo_public_id',
+    type: 'text',
+    nullable: true,
+  })
+  photoPublicId!: string | null;
+
   // ===========================
   // DOCUMENTOS DO CADASTRO
   // ===========================

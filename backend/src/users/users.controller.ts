@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -11,8 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateInternalUserDto } from './dto/create-internal-user.dto';
@@ -54,6 +54,10 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  // ==========================================
+  // FOTO DE PERFIL NO CLOUDINARY
+  // ==========================================
+
   @Roles(
     UserType.ADMIN,
     UserType.OPERATOR,
@@ -64,11 +68,47 @@ export class UsersController {
     UserType.OUTSOURCED_WORKER,
   )
   @Patch(':id/photo')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+
+      fileFilter: (_req, file, callback) => {
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          callback(
+            new BadRequestException(
+              'Formato inválido. Envie uma imagem JPG, JPEG, PNG ou WEBP.',
+            ),
+            false,
+          );
+          return;
+        }
+
+        callback(null, true);
+      },
+    }),
+  )
   updatePhoto(
     @Param('id') id: string,
-    @Body() body: { photoUrl: string },
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.usersService.updatePhoto(id, body.photoUrl);
+    if (!file) {
+      throw new BadRequestException(
+        'Nenhuma foto de perfil foi enviada.',
+      );
+    }
+
+    return this.usersService.updatePhoto(id, file);
   }
 
   @Roles(
@@ -84,7 +124,10 @@ export class UsersController {
     @Param('id') id: string,
     @Body() body: { termsVersion: string },
   ) {
-    return this.usersService.acceptTerms(id, body.termsVersion);
+    return this.usersService.acceptTerms(
+      id,
+      body.termsVersion,
+    );
   }
 
   @Roles(UserType.ADMIN)
@@ -111,6 +154,10 @@ export class UsersController {
     return this.usersService.cancel(id);
   }
 
+  // ==========================================
+  // DOCUMENTOS NO CLOUDINARY
+  // ==========================================
+
   @Roles(
     UserType.STUDENT,
     UserType.TEACHER,
@@ -122,23 +169,12 @@ export class UsersController {
   @Post(':id/documents')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/user-documents',
-        filename: (_req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
+      storage: memoryStorage(),
 
-          const extension = extname(file.originalname);
-
-          callback(
-            null,
-            `${file.fieldname}-${uniqueSuffix}${extension}`,
-          );
-        },
-      }),
       limits: {
         fileSize: 10 * 1024 * 1024,
       },
+
       fileFilter: (_req, file, callback) => {
         const allowedMimeTypes = [
           'application/pdf',
@@ -148,10 +184,13 @@ export class UsersController {
         ];
 
         if (!allowedMimeTypes.includes(file.mimetype)) {
-          return callback(
-            new Error('Formato inválido. Envie PDF, JPG ou PNG.'),
+          callback(
+            new BadRequestException(
+              'Formato inválido. Envie PDF, JPG, JPEG ou PNG.',
+            ),
             false,
           );
+          return;
         }
 
         callback(null, true);
@@ -163,7 +202,17 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: { type: UserDocumentType },
   ) {
-    return this.usersService.uploadDocument(id, file, body.type);
+    if (!file) {
+      throw new BadRequestException(
+        'Nenhum documento foi enviado.',
+      );
+    }
+
+    return this.usersService.uploadDocument(
+      id,
+      file,
+      body.type,
+    );
   }
 
   @Roles(

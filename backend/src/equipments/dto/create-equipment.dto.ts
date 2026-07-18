@@ -22,5 +22,9 @@ export class CreateEquipmentDto {
 
   @IsOptional()
   @IsString()
+  photoPublicId?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }

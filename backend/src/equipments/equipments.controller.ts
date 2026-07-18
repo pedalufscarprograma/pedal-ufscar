@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -11,9 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
-
-import { diskStorage } from 'multer';
-import * as path from 'path';
+import { memoryStorage } from 'multer';
 
 import { CreateEquipmentDto } from './dto/create-equipment.dto';
 import { EquipmentsService } from './equipments.service';
@@ -24,11 +23,13 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
 import { UserType } from '../users/entities/user.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Controller('equipments')
 export class EquipmentsController {
   constructor(
     private readonly equipmentsService: EquipmentsService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @Get('public/:id')
@@ -39,13 +40,8 @@ export class EquipmentsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Post()
-  create(
-    @Body()
-    createEquipmentDto: CreateEquipmentDto,
-  ) {
-    return this.equipmentsService.create(
-      createEquipmentDto,
-    );
+  create(@Body() createEquipmentDto: CreateEquipmentDto) {
+    return this.equipmentsService.create(createEquipmentDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -53,23 +49,51 @@ export class EquipmentsController {
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/equipments',
+      storage: memoryStorage(),
 
-        filename: (_req, file, callback) => {
-          const timestamp = Date.now();
-          const extension = path.extname(file.originalname);
-          const filename = `equipment-${timestamp}${extension}`;
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
 
-          callback(null, filename);
-        },
-      }),
+      fileFilter: (_req, file, callback) => {
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          callback(
+            new BadRequestException(
+              'Formato inválido. Envie uma imagem JPG, JPEG, PNG ou WEBP.',
+            ),
+            false,
+          );
+          return;
+        }
+
+        callback(null, true);
+      },
     }),
   )
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException(
+        'Nenhuma imagem foi enviada.',
+      );
+    }
+
+    const result = await this.cloudinaryService.uploadFile(
+      file,
+      'pedal-ufscar/equipments',
+    );
+
     return {
       success: true,
-      photoUrl: `${process.env.API_URL || 'http://localhost:3000'}/uploads/equipments/${file.filename}`,
+      message: 'Imagem enviada com sucesso.',
+      photoUrl: result.secure_url,
+      photoPublicId: result.public_id,
     };
   }
 
@@ -89,19 +113,19 @@ export class EquipmentsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(
-  UserType.ADMIN,
-  UserType.OPERATOR,
-  UserType.MECHANIC,
-  UserType.STUDENT,
-  UserType.TEACHER,
-  UserType.STAFF,
-  UserType.OUTSOURCED_WORKER,
-)
-@Get('available')
-findAvailable() {
-  return this.equipmentsService.findAvailable();
-}
+  @Roles(
+    UserType.ADMIN,
+    UserType.OPERATOR,
+    UserType.MECHANIC,
+    UserType.STUDENT,
+    UserType.TEACHER,
+    UserType.STAFF,
+    UserType.OUTSOURCED_WORKER,
+  )
+  @Get('available')
+  findAvailable() {
+    return this.equipmentsService.findAvailable();
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(
@@ -140,29 +164,17 @@ findAvailable() {
     );
   }
 
-  // ==========================
-  // PUBLICAR BICICLETA
-  // ==========================
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Patch(':id/publish')
-  publish(
-    @Param('id') id: string,
-  ) {
+  publish(@Param('id') id: string) {
     return this.equipmentsService.publish(id);
   }
-
-  // ==========================
-  // CANCELAR PUBLICAÇÃO
-  // ==========================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.ADMIN, UserType.OPERATOR)
   @Patch(':id/unpublish')
-  unpublish(
-    @Param('id') id: string,
-  ) {
+  unpublish(@Param('id') id: string) {
     return this.equipmentsService.unpublish(id);
   }
 }

@@ -32,6 +32,13 @@ export class UserDocument {
   fileUrl!: string;
 
   @Column({
+    name: 'file_public_id',
+    type: 'text',
+    nullable: true,
+  })
+  filePublicId!: string | null;
+
+  @Column({
     name: 'original_name',
     type: 'varchar',
     length: 255,

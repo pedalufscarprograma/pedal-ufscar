@@ -60,6 +60,13 @@ export class Equipment {
   photoUrl!: string | null;
 
   @Column({
+    name: 'photo_public_id',
+    type: 'text',
+    nullable: true,
+  })
+  photoPublicId!: string | null;
+
+  @Column({
     type: 'enum',
     enum: EquipmentStatus,
     default: EquipmentStatus.AVAILABLE,

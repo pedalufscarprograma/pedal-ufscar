@@ -13,6 +13,7 @@ import { AuditAction } from '../audit-logs/entities/audit-log.entity';
 
 import { NotificationsService } from '../notifications/notifications.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { User, UserStatus, UserType } from './entities/user.entity';
@@ -37,6 +38,8 @@ export class UsersService {
     private readonly notificationsService: NotificationsService,
 
     private readonly realtimeGateway: RealtimeGateway,
+
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   private notifyAdminsAboutUserRequest(payload?: any) {
@@ -93,7 +96,8 @@ export class UsersService {
       genderIdentity: createUserDto.genderIdentity || null,
       socialClass: createUserDto.socialClass || null,
 
-      photoUrl: createUserDto.photoUrl || null,
+      photoUrl: null,
+      photoPublicId: null,
       userType: createUserDto.userType,
       passwordHash,
       status: UserStatus.PENDING,
@@ -164,6 +168,7 @@ export class UsersService {
       socialClass: null,
 
       photoUrl: null,
+      photoPublicId: null,
       userType: dto.userType,
       passwordHash,
       status: UserStatus.APPROVED,
@@ -234,16 +239,64 @@ export class UsersService {
     return user;
   }
 
-  async updatePhoto(id: string, photoUrl: string) {
-    if (!photoUrl) {
-      throw new BadRequestException('A foto de perfil é obrigatória.');
+  async updatePhoto(
+    id: string, 
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException(
+        'A foto de perfil é obrigatória.',
+      );
+    }
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Formato inválido. Envie uma imagem JPG, JPEG, PNG ou WEBP.',
+      );
     }
 
     const user = await this.findOne(id);
 
-    user.photoUrl = photoUrl;
+    const oldPhotoPublicId = user.photoPublicId;
 
-    const savedUser = await this.usersRepository.save(user);
+    const uploadResult =
+      await this.cloudinaryService.uploadFile(
+        file,
+        'pedal-ufscar/users/profile-photos',
+      );
+
+    user.photoUrl = uploadResult.secure_url;
+    user.photoPublicId = uploadResult.public_id;
+
+    let savedUser: User;
+
+    try {
+      savedUser = await this.usersRepository.save(user);
+    } catch (error) {
+      await this.cloudinaryService.deleteFile(
+        uploadResult.public_id,
+        'image',
+      );
+
+      throw error;
+    }
+
+    if (
+      oldPhotoPublicId &&
+      oldPhotoPublicId !== savedUser.photoPublicId
+    ) {
+      await this.cloudinaryService.deleteFile(
+        oldPhotoPublicId,
+        'image',
+      );
+    }
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_USER,
@@ -252,7 +305,12 @@ export class UsersService {
       description: `Foto de perfil atualizada: ${savedUser.fullName} (${savedUser.email})`,
     });
 
-    return savedUser;
+    return {
+      message: 'Foto de perfil atualizada com sucesso.',
+      photoUrl: savedUser.photoUrl,
+      photoPublicId: savedUser.photoPublicId,
+      user: savedUser,
+    };
   }
 
   async acceptTerms(id: string, termsVersion: string) {
@@ -463,17 +521,25 @@ export class UsersService {
     type: UserDocumentType,
   ) {
     if (!file) {
-      throw new BadRequestException('O arquivo do documento é obrigatório.');
+      throw new BadRequestException(
+        'O arquivo do documento é obrigatório.',
+      );
     }
 
     if (!type) {
-      throw new BadRequestException('O tipo do documento é obrigatório.');
+      throw new BadRequestException(
+        'O tipo do documento é obrigatório.',
+      );
     }
 
-    const allowedTypes = Object.values(UserDocumentType);
+    const allowedTypes = Object.values(
+      UserDocumentType,
+    );
 
     if (!allowedTypes.includes(type)) {
-      throw new BadRequestException('Tipo de documento inválido.');
+      throw new BadRequestException(
+        'Tipo de documento inválido.',
+      );
     }
 
     const allowedMimeTypes = [
@@ -491,35 +557,72 @@ export class UsersService {
 
     const user = await this.findOne(id);
 
-    const fileUrl = `/uploads/user-documents/${file.filename}`;
-
-    let document = await this.userDocumentsRepository.findOne({
-      where: {
-        user: {
-          id: user.id,
+    let document =
+      await this.userDocumentsRepository.findOne({
+        where: {
+          user: {
+            id: user.id,
+          },
+          type,
         },
-        type,
-      },
-      relations: {
-        user: true,
-      },
-    });
+
+        relations: {
+          user: true,
+        },
+      });
+
+    const oldFilePublicId =
+      document?.filePublicId || null;
+
+    const uploadResult =
+      await this.cloudinaryService.uploadFile(
+        file,
+        `pedal-ufscar/users/documents/${user.id}`,
+      );
 
     if (document) {
-      document.fileUrl = fileUrl;
+      document.fileUrl = uploadResult.secure_url;
+      document.filePublicId = uploadResult.public_id;
       document.originalName = file.originalname;
       document.mimeType = file.mimetype;
     } else {
-      document = this.userDocumentsRepository.create({
-        type,
-        fileUrl,
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        user,
-      });
+      document =
+        this.userDocumentsRepository.create({
+          type,
+          fileUrl: uploadResult.secure_url,
+          filePublicId: uploadResult.public_id,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          user,
+        });
     }
 
-    const savedDocument = await this.userDocumentsRepository.save(document);
+    let savedDocument: UserDocument;
+
+    try {
+      savedDocument =
+        await this.userDocumentsRepository.save(
+          document,
+        );
+    } catch (error) {
+      await this.cloudinaryService.deleteFile(
+        uploadResult.public_id,
+        'image',
+      );
+
+      throw error;
+    }
+
+    if (
+      oldFilePublicId &&
+      oldFilePublicId !==
+        savedDocument.filePublicId
+    ) {
+      await this.cloudinaryService.deleteFile(
+        oldFilePublicId,
+        'image',
+      );
+    }
 
     await this.auditLogsService.register({
       action: AuditAction.UPDATE_USER,
@@ -528,7 +631,10 @@ export class UsersService {
       description: `Documento enviado/atualizado para o usuário ${user.fullName} (${user.email}): ${type}`,
     });
 
-    return savedDocument;
+    return {
+      message: 'Documento enviado com sucesso.',
+      document: savedDocument,
+    };
   }
 
   async getDocuments(id: string) {

@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { OperatingHoursModule } from './operating-hours/operating-hours.module';
 import { LostReportsModule } from './lost-reports/lost-reports.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     OperatingHoursModule,
     LostReportsModule,
     RealtimeModule,
+    CloudinaryModule,
   ],
 })
 export class AppModule {}

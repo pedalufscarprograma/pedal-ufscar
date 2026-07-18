@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcrypt';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import { Repository } from 'typeorm';
 
 import { LoginDto } from './dto/login.dto';
@@ -55,59 +55,153 @@ export class AuthService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  private async sendPasswordResetEmail(email: string, code: string) {
-    const resendApiKey = process.env.RESEND_API_KEY;
+  private async sendPasswordResetEmail(
+    email: string,
+    code: string,
+  ) {
+    const emailHost = process.env.EMAIL_HOST;
+    const emailPort = Number(process.env.EMAIL_PORT || 587);
+    const emailUser = process.env.EMAIL_USER;
+    const emailPass = process.env.EMAIL_PASS;
+    const emailFrom = process.env.EMAIL_FROM;
 
-    const emailFrom =
-      process.env.EMAIL_FROM || 'PEDAL UFSCar <onboarding@resend.dev>';
-
-    if (!resendApiKey) {
+    if (
+      !emailHost ||
+      !emailUser ||
+      !emailPass ||
+      !emailFrom
+    ) {
       throw new BadRequestException(
-        'Serviço de e-mail ainda não configurado.',
+        'Serviço de e-mail não configurado.',
       );
     }
 
-    const resend = new Resend(resendApiKey);
-
-    await resend.emails.send({
-      from: emailFrom,
-      to: email,
-      subject: 'Código de recuperação de senha - PEDAL UFSCar',
-      html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-          <h2>Recuperação de senha - PEDAL UFSCar</h2>
-
-          <p>Olá,</p>
-
-          <p>Você solicitou a recuperação de senha da sua conta no sistema PEDAL UFSCar.</p>
-
-          <p>Use o código abaixo para criar uma nova senha:</p>
-
-          <div style="
-            margin: 24px 0;
-            padding: 18px 24px;
-            background: #f1f5f9;
-            border-radius: 12px;
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 8px;
-            text-align: center;
-            color: #4f46e5;
-          ">
-            ${code}
-          </div>
-
-          <p>Este código expira em 15 minutos.</p>
-
-          <p>Se você não solicitou esta recuperação, ignore este e-mail.</p>
-
-          <p style="margin-top: 28px;">
-            Atenciosamente,<br />
-            Equipe PEDAL UFSCar
-          </p>
-        </div>
-      `,
+    const transporter = nodemailer.createTransport({
+      host: emailHost,
+      port: emailPort,
+      secure: emailPort === 465,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
     });
+
+    try {
+      const result = await transporter.sendMail({
+        from: emailFrom,
+        to: email,
+        subject:
+          'Código de recuperação de senha - PEDAL UFSCar',
+
+        html: `
+          <div style="
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 24px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #172033;
+            background-color: #f8fafc;
+          ">
+            <div style="
+              background-color: #166534;
+              padding: 24px;
+              border-radius: 14px 14px 0 0;
+              text-align: center;
+              color: #ffffff;
+            ">
+              <h1 style="margin: 0; font-size: 28px;">
+                PEDAL UFSCar
+              </h1>
+
+              <p style="margin: 8px 0 0;">
+                Programa de Empréstimo de Bicicletas
+              </p>
+            </div>
+
+            <div style="
+              padding: 30px;
+              background-color: #ffffff;
+              border: 1px solid #e2e8f0;
+              border-top: none;
+              border-radius: 0 0 14px 14px;
+            ">
+              <h2 style="margin-top: 0;">
+                Recuperação de senha
+              </h2>
+
+              <p>Olá,</p>
+
+              <p>
+                Recebemos uma solicitação para redefinir a
+                senha da sua conta no sistema PEDAL UFSCar.
+              </p>
+
+              <p>
+                Digite o código abaixo na página de recuperação:
+              </p>
+
+              <div style="
+                margin: 28px 0;
+                padding: 22px;
+                background-color: #f1f5f9;
+                border-radius: 12px;
+                text-align: center;
+                font-size: 34px;
+                font-weight: bold;
+                letter-spacing: 8px;
+                color: #166534;
+              ">
+                ${code}
+              </div>
+
+              <p>
+                Este código é válido por
+                <strong>15 minutos</strong> e pode ser
+                utilizado apenas uma vez.
+              </p>
+
+              <p>
+                Caso você não tenha solicitado a alteração
+                da senha, ignore este e-mail. Sua senha
+                permanecerá a mesma.
+              </p>
+
+              <p style="margin-top: 32px;">
+                Atenciosamente,<br />
+                <strong>Equipe PEDAL UFSCar</strong>
+              </p>
+            </div>
+          </div>
+        `,
+
+        text: `
+  PEDAL UFSCar
+
+  Recebemos uma solicitação para redefinir a senha da sua conta.
+
+  Código de recuperação: ${code}
+
+  Este código é válido por 15 minutos e pode ser utilizado apenas uma vez.
+
+  Caso você não tenha solicitado esta alteração, ignore esta mensagem.
+
+  Equipe PEDAL UFSCar
+        `.trim(),
+      });
+
+      console.log(
+        `E-mail de recuperação enviado para ${email}. ID: ${result.messageId}`,
+      );
+    } catch (error) {
+      console.error(
+        'Erro ao enviar e-mail de recuperação:',
+        error,
+      );
+
+      throw new BadRequestException(
+        'Não foi possível enviar o código de recuperação por e-mail.',
+      );
+    }
   }
 
   private validateUserStatus(user: User) {

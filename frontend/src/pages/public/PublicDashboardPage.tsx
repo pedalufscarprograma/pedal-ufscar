@@ -533,84 +533,70 @@ export default function PublicDashboardPage() {
     }
   }
 
-  function handleProfilePhotoSelected(
+  async function handleProfilePhotoSelected(
     event: React.ChangeEvent<HTMLInputElement>,
   ) {
     const file = event.target.files?.[0];
 
     if (!file || !user) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.warning('Selecione apenas arquivo de imagem.');
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.warning(
+        'Selecione uma imagem JPG, JPEG, PNG ou WEBP.',
+      );
       return;
     }
 
-    const reader = new FileReader();
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning(
+        'A imagem deve possuir no máximo 5 MB.',
+      );
+      return;
+    }
 
-    reader.onload = () => {
-      const image = new Image();
+    try {
+      setUpdatingPhoto(true);
 
-      image.onload = async () => {
-        const canvas = document.createElement('canvas');
+      const formData = new FormData();
 
-        const maxSize = 400;
-        let { width, height } = image;
+      formData.append('file', file);
 
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          }
-        } else if (height > maxSize) {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
+      const response = await api.patch(
+        `/users/${user.id}/photo`,
+        formData,
+      );
 
-        canvas.width = width;
-        canvas.height = height;
-
-        const context = canvas.getContext('2d');
-
-        if (!context) {
-          toast.error('Erro ao processar imagem.');
-          return;
-        }
-
-        context.drawImage(image, 0, 0, width, height);
-
-        const photoUrl = canvas.toDataURL('image/jpeg', 0.7);
-
-        try {
-          setUpdatingPhoto(true);
-
-          const response = await api.patch(`/users/${user.id}/photo`, {
-            photoUrl,
-          });
-
-          const updatedUser = {
-            ...user,
-            photoUrl: response.data.photoUrl,
-          };
-
-          setUser(updatedUser);
-          localStorage.setItem('public_user', JSON.stringify(updatedUser));
-
-          toast.success('Foto de perfil atualizada!');
-        } catch (error: any) {
-          toast.error(
-            error?.response?.data?.message ||
-              'Erro ao atualizar foto.',
-          );
-        } finally {
-          setUpdatingPhoto(false);
-          event.target.value = '';
-        }
+      const updatedUser = {
+        ...user,
+        photoUrl: response.data.photoUrl,
       };
 
-      image.src = reader.result as string;
-    };
+      setUser(updatedUser);
 
-    reader.readAsDataURL(file);
+      localStorage.setItem(
+        'public_user',
+        JSON.stringify(updatedUser),
+      );
+
+      toast.success(
+        'Foto de perfil atualizada com sucesso!',
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          'Erro ao atualizar foto.',
+      );
+    } finally {
+      setUpdatingPhoto(false);
+      event.target.value = '';
+    }
   }
 
   function changeTab(tab: ActiveTab) {

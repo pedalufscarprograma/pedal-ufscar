@@ -1,9 +1,10 @@
 import { io } from 'socket.io-client';
 
-export const socket = io(
-  import.meta.env.VITE_API_URL,
-  {
-    autoConnect: false,
-    transports: ['websocket'],
-  },
-);
+const socketUrl =
+  import.meta.env.VITE_API_URL ||
+  'https://pedal-ufscar-backend-diug.onrender.com';
+
+export const socket = io(socketUrl, {
+  autoConnect: false,
+  transports: ['websocket'],
+});

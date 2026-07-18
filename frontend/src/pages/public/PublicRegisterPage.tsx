@@ -281,7 +281,7 @@ export default function PublicRegisterPage() {
 
   const [userType, setUserType] = useState('student');
 
-  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState('');
 
   const [rgCinFile, setRgCinFile] = useState<File | null>(null);
@@ -352,54 +352,29 @@ export default function PublicRegisterPage() {
 
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.warning('Selecione apenas arquivo de imagem.');
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.warning('Selecione uma imagem JPG, PNG ou WEBP.');
+      event.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
+    if (file.size > 5 * 1024 * 1024) {
+      toast.warning('A foto deve ter no máximo 5 MB.');
+      event.target.value = '';
+      return;
+    }
 
-    reader.onload = () => {
-      const image = new Image();
+    setPhotoFile(file);
 
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-
-        const maxSize = 400;
-        let { width, height } = image;
-
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          }
-        } else if (height > maxSize) {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const context = canvas.getContext('2d');
-
-        if (!context) {
-          toast.error('Erro ao processar imagem.');
-          return;
-        }
-
-        context.drawImage(image, 0, 0, width, height);
-
-        const compressedImage = canvas.toDataURL('image/jpeg', 0.7);
-
-        setPhotoUrl(compressedImage);
-        setPhotoPreview(compressedImage);
-      };
-
-      image.src = reader.result as string;
-    };
-
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
   }
 
   async function uploadUserDocument(
@@ -419,6 +394,26 @@ export default function PublicRegisterPage() {
         'Content-Type': 'multipart/form-data',
       },
     });
+  }
+
+  async function uploadProfilePhoto(
+    userId: string,
+    token: string,
+    file: File,
+  ) {
+    const formData = new FormData();
+
+    formData.append('file', file);
+
+    return api.patch(
+      `/users/${userId}/photo`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
   }
 
   async function handleRegister(event: React.FormEvent) {
@@ -480,7 +475,6 @@ export default function PublicRegisterPage() {
         socialClass,
         userType,
         password,
-        photoUrl,
       });
 
       const userId =
@@ -498,6 +492,14 @@ export default function PublicRegisterPage() {
 
         setRegistered(true);
         return;
+      }
+
+      if (photoFile) {
+        await uploadProfilePhoto(
+          userId,
+          token,
+          photoFile,
+        );
       }
 
       await uploadUserDocument(userId, token, 'rg_cin', rgCinFile);

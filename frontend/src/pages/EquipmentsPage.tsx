@@ -29,6 +29,7 @@ interface Equipment {
   name: string;
   description: string | null;
   photoUrl: string | null;
+  photoPublicId: string | null;
   status: string;
   notes: string | null;
 
@@ -58,6 +59,7 @@ export default function EquipmentsPage() {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [photoPublicId, setPhotoPublicId] = useState('');
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -65,6 +67,7 @@ export default function EquipmentsPage() {
   const [editCode, setEditCode] = useState('');
   const [editName, setEditName] = useState('');
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
+  const [editPhotoPublicId, setEditPhotoPublicId] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editStatus, setEditStatus] = useState('available');
@@ -86,7 +89,14 @@ export default function EquipmentsPage() {
     }
   }
 
-  async function uploadEquipmentImage(file: File) {
+  interface EquipmentUploadResult {
+    photoUrl: string;
+    photoPublicId: string;
+  }
+
+  async function uploadEquipmentImage(
+    file: File,
+  ): Promise<EquipmentUploadResult | null> {
     if (!file.type.startsWith('image/')) {
       toast.warning('Selecione apenas arquivos de imagem.');
       return null;
@@ -95,13 +105,20 @@ export default function EquipmentsPage() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await api.post('/equipments/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const response = await api.post(
+      '/equipments/upload',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-    });
+    );
 
-    return response.data.photoUrl as string;
+    return {
+      photoUrl: response.data.photoUrl,
+      photoPublicId: response.data.photoPublicId,
+    };
   }
 
   async function handleUploadImage(event: ChangeEvent<HTMLInputElement>) {
@@ -112,12 +129,14 @@ export default function EquipmentsPage() {
     try {
       setUploadingImage(true);
 
-      const uploadedPhotoUrl = await uploadEquipmentImage(file);
+      const uploadedImage = await uploadEquipmentImage(file);
 
-      if (uploadedPhotoUrl) {
-        setPhotoUrl(uploadedPhotoUrl);
-        toast.success('Imagem carregada com sucesso!');
-      }
+        if (uploadedImage) {
+          setPhotoUrl(uploadedImage.photoUrl);
+          setPhotoPublicId(uploadedImage.photoPublicId);
+
+          toast.success('Imagem carregada com sucesso!');
+        }
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -137,12 +156,16 @@ export default function EquipmentsPage() {
     try {
       setUploadingImage(true);
 
-      const uploadedPhotoUrl = await uploadEquipmentImage(file);
+      const uploadedImage = await uploadEquipmentImage(file);
 
-      if (uploadedPhotoUrl) {
-        setEditPhotoUrl(uploadedPhotoUrl);
-        toast.success('Imagem carregada com sucesso!');
-      }
+        if (uploadedImage) {
+          setEditPhotoUrl(uploadedImage.photoUrl);
+          setEditPhotoPublicId(
+            uploadedImage.photoPublicId,
+          );
+
+          toast.success('Imagem carregada com sucesso!');
+        }
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -163,6 +186,7 @@ export default function EquipmentsPage() {
         code,
         name,
         photoUrl,
+        photoPublicId,
         description,
         notes,
       });
@@ -170,6 +194,7 @@ export default function EquipmentsPage() {
       setCode('');
       setName('');
       setPhotoUrl('');
+      setPhotoPublicId('');
       setDescription('');
       setNotes('');
       setType('bike');
@@ -191,6 +216,9 @@ export default function EquipmentsPage() {
     setEditCode(equipment.code);
     setEditName(equipment.name);
     setEditPhotoUrl(equipment.photoUrl || '');
+    setEditPhotoPublicId(
+      equipment.photoPublicId || '',
+    );
     setEditDescription(equipment.description || '');
     setEditNotes(equipment.notes || '');
     setEditStatus(equipment.status);
@@ -202,6 +230,7 @@ export default function EquipmentsPage() {
     setEditCode('');
     setEditName('');
     setEditPhotoUrl('');
+    setEditPhotoPublicId('');
     setEditDescription('');
     setEditNotes('');
     setEditStatus('available');
@@ -220,6 +249,7 @@ export default function EquipmentsPage() {
         code: editCode,
         name: editName,
         photoUrl: editPhotoUrl,
+        photoPublicId: editPhotoPublicId,
         description: editDescription,
         notes: editNotes,
       });

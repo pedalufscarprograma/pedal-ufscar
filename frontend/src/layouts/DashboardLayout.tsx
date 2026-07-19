@@ -251,7 +251,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            <aside className="relative z-10 flex h-full w-72 flex-col justify-between bg-slate-950 px-6 py-6 text-white shadow-2xl">
+            <aside className="relative z-10 flex h-[100dvh] w-72 flex-col overflow-hidden bg-slate-950 px-6 py-6 text-white shadow-2xl">
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="absolute right-4 top-4 rounded-xl p-2 text-slate-300 hover:bg-slate-800"
@@ -319,22 +319,41 @@ function SidebarContent({
   onNavigate,
 }: SidebarContentProps) {
   return (
-    <>
-      <div>
-        <div className="mb-10">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="shrink-0">
+        <div className="mb-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 shadow-lg">
             <Bike size={28} />
           </div>
 
-          <h1 className="mt-4 text-2xl font-black tracking-wide">PEDAL</h1>
+          <h1 className="mt-4 text-2xl font-black tracking-wide">
+            PEDAL
+          </h1>
 
-          <p className="text-sm text-slate-400">Sistema UFSCar</p>
+          <p className="text-sm text-slate-400">
+            Sistema UFSCar
+          </p>
         </div>
+      </div>
 
-        <nav className="flex flex-col gap-2">
+      <nav
+        className="
+          min-h-0
+          flex-1
+          overflow-y-auto
+          overscroll-contain
+          pr-1
+          [-webkit-overflow-scrolling:touch]
+        "
+      >
+        <div className="flex flex-col gap-2 pb-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const hasAlert = Boolean(item.alertCount && item.alertCount > 0);
+
+            const hasAlert = Boolean(
+              item.alertCount &&
+                item.alertCount > 0,
+            );
 
             return (
               <NavLink
@@ -344,9 +363,11 @@ function SidebarContent({
                 className={({ isActive }) =>
                   [
                     'flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition',
+
                     hasAlert && !isActive
                       ? 'bg-red-600 text-white shadow-lg shadow-red-950/30 hover:bg-red-700'
                       : '',
+
                     isActive
                       ? hasAlert
                         ? 'bg-red-600 text-white shadow-lg shadow-red-950/40'
@@ -370,18 +391,29 @@ function SidebarContent({
               </NavLink>
             );
           })}
-        </nav>
-      </div>
+        </div>
+      </nav>
 
-      <button
-        type="button"
-        onClick={onLogout}
-        className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+      <div
+        className="
+          shrink-0
+          border-t
+          border-slate-800
+          bg-slate-950
+          pb-[calc(0.5rem+env(safe-area-inset-bottom))]
+          pt-4
+        "
       >
-        <LogOut size={18} />
-        Sair
-      </button>
-    </>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+        >
+          <LogOut size={18} />
+          Sair
+        </button>
+      </div>
+    </div>
   );
 }
 

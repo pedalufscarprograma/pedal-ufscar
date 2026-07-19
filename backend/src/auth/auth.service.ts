@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcrypt';
-import * as nodemailer from 'nodemailer';
 import { Repository } from 'typeorm';
 
 import { LoginDto } from './dto/login.dto';
@@ -59,123 +58,244 @@ export class AuthService {
     email: string,
     code: string,
   ) {
-    const emailHost = process.env.EMAIL_HOST;
-    const emailPort = Number(process.env.EMAIL_PORT || 587);
-    const emailUser = process.env.EMAIL_USER;
-    const emailPass = process.env.EMAIL_PASS;
-    const emailFrom = process.env.EMAIL_FROM;
+    const brevoApiKey = process.env.BREVO_API_KEY;
 
-    if (
-      !emailHost ||
-      !emailUser ||
-      !emailPass ||
-      !emailFrom
-    ) {
+    const senderEmail =
+      process.env.BREVO_SENDER_EMAIL ||
+      'pedalufscarprograma@gmail.com';
+
+    const senderName =
+      process.env.BREVO_SENDER_NAME ||
+      'PEDAL UFSCar';
+
+    if (!brevoApiKey) {
       throw new BadRequestException(
         'Serviço de e-mail não configurado.',
       );
     }
 
-    const transporter = nodemailer.createTransport({
-      host: emailHost,
-      port: emailPort,
-      secure: emailPort === 465,
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    });
+    const response = await fetch(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        method: 'POST',
 
-    try {
-      const result = await transporter.sendMail({
-        from: emailFrom,
-        to: email,
-        subject:
-          'Código de recuperação de senha - PEDAL UFSCar',
+        headers: {
+          accept: 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json',
+        },
 
-        html: `
-          <div style="
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 24px;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #172033;
-            background-color: #f8fafc;
-          ">
-            <div style="
-              background-color: #166534;
-              padding: 24px;
-              border-radius: 14px 14px 0 0;
-              text-align: center;
-              color: #ffffff;
-            ">
-              <h1 style="margin: 0; font-size: 28px;">
-                PEDAL UFSCar
-              </h1>
+        body: JSON.stringify({
+          sender: {
+            name: senderName,
+            email: senderEmail,
+          },
 
-              <p style="margin: 8px 0 0;">
-                Programa de Empréstimo de Bicicletas
-              </p>
-            </div>
+          to: [
+            {
+              email,
+            },
+          ],
 
-            <div style="
-              padding: 30px;
-              background-color: #ffffff;
-              border: 1px solid #e2e8f0;
-              border-top: none;
-              border-radius: 0 0 14px 14px;
-            ">
-              <h2 style="margin-top: 0;">
-                Recuperação de senha
-              </h2>
+          replyTo: {
+            name: senderName,
+            email: senderEmail,
+          },
 
-              <p>Olá,</p>
+          subject:
+            'Código de recuperação de senha - PEDAL UFSCar',
 
-              <p>
-                Recebemos uma solicitação para redefinir a
-                senha da sua conta no sistema PEDAL UFSCar.
-              </p>
+          htmlContent: `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+              <head>
+                <meta charset="UTF-8" />
+                <meta
+                  name="viewport"
+                  content="width=device-width, initial-scale=1.0"
+                />
 
-              <p>
-                Digite o código abaixo na página de recuperação:
-              </p>
+                <title>
+                  Recuperação de senha - PEDAL UFSCar
+                </title>
+              </head>
 
-              <div style="
-                margin: 28px 0;
-                padding: 22px;
-                background-color: #f1f5f9;
-                border-radius: 12px;
-                text-align: center;
-                font-size: 34px;
-                font-weight: bold;
-                letter-spacing: 8px;
-                color: #166534;
-              ">
-                ${code}
-              </div>
+              <body
+                style="
+                  margin: 0;
+                  padding: 0;
+                  background-color: #f1f5f9;
+                  font-family: Arial, Helvetica, sans-serif;
+                  color: #172033;
+                "
+              >
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  role="presentation"
+                  style="
+                    background-color: #f1f5f9;
+                    padding: 32px 16px;
+                  "
+                >
+                  <tr>
+                    <td align="center">
+                      <table
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        role="presentation"
+                        style="
+                          max-width: 600px;
+                          background-color: #ffffff;
+                          border-radius: 16px;
+                          overflow: hidden;
+                          box-shadow: 0 8px 24px
+                            rgba(15, 23, 42, 0.08);
+                        "
+                      >
+                        <tr>
+                          <td
+                            align="center"
+                            style="
+                              padding: 28px;
+                              background-color: #166534;
+                              color: #ffffff;
+                            "
+                          >
+                            <h1
+                              style="
+                                margin: 0;
+                                font-size: 28px;
+                              "
+                            >
+                              PEDAL UFSCar
+                            </h1>
 
-              <p>
-                Este código é válido por
-                <strong>15 minutos</strong> e pode ser
-                utilizado apenas uma vez.
-              </p>
+                            <p
+                              style="
+                                margin: 8px 0 0;
+                                font-size: 15px;
+                              "
+                            >
+                              Programa de Empréstimo de Bicicletas
+                            </p>
+                          </td>
+                        </tr>
 
-              <p>
-                Caso você não tenha solicitado a alteração
-                da senha, ignore este e-mail. Sua senha
-                permanecerá a mesma.
-              </p>
+                        <tr>
+                          <td style="padding: 32px;">
+                            <h2
+                              style="
+                                margin-top: 0;
+                                color: #0f172a;
+                              "
+                            >
+                              Recuperação de senha
+                            </h2>
 
-              <p style="margin-top: 32px;">
-                Atenciosamente,<br />
-                <strong>Equipe PEDAL UFSCar</strong>
-              </p>
-            </div>
-          </div>
-        `,
+                            <p>Olá,</p>
 
-        text: `
+                            <p
+                              style="
+                                line-height: 1.7;
+                                color: #475569;
+                              "
+                            >
+                              Recebemos uma solicitação para
+                              redefinir a senha da sua conta no
+                              sistema PEDAL UFSCar.
+                            </p>
+
+                            <p
+                              style="
+                                line-height: 1.7;
+                                color: #475569;
+                              "
+                            >
+                              Digite o código abaixo na página de
+                              recuperação:
+                            </p>
+
+                            <div
+                              style="
+                                margin: 28px 0;
+                                padding: 22px;
+                                background-color: #f0fdf4;
+                                border: 1px solid #bbf7d0;
+                                border-radius: 12px;
+                                text-align: center;
+                                font-size: 34px;
+                                font-weight: bold;
+                                letter-spacing: 8px;
+                                color: #166534;
+                              "
+                            >
+                              ${code}
+                            </div>
+
+                            <p
+                              style="
+                                line-height: 1.7;
+                                color: #475569;
+                              "
+                            >
+                              Este código é válido por
+                              <strong>15 minutos</strong> e pode ser
+                              utilizado apenas uma vez.
+                            </p>
+
+                            <p
+                              style="
+                                line-height: 1.7;
+                                color: #475569;
+                              "
+                            >
+                              Caso você não tenha solicitado a
+                              recuperação, ignore este e-mail. Sua
+                              senha continuará a mesma.
+                            </p>
+
+                            <p
+                              style="
+                                margin-top: 32px;
+                                line-height: 1.7;
+                              "
+                            >
+                              Atenciosamente,<br />
+                              <strong>Equipe PEDAL UFSCar</strong>
+                            </p>
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td
+                            align="center"
+                            style="
+                              padding: 18px;
+                              background-color: #f8fafc;
+                              color: #64748b;
+                              font-size: 12px;
+                            "
+                          >
+                            Esta é uma mensagem automática de
+                            segurança. Não informe este código a
+                            outras pessoas.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+            </html>
+          `,
+
+          textContent: `
   PEDAL UFSCar
+
+  Recuperação de senha
 
   Recebemos uma solicitação para redefinir a senha da sua conta.
 
@@ -183,25 +303,41 @@ export class AuthService {
 
   Este código é válido por 15 minutos e pode ser utilizado apenas uma vez.
 
-  Caso você não tenha solicitado esta alteração, ignore esta mensagem.
+  Caso você não tenha solicitado esta recuperação, ignore esta mensagem.
 
   Equipe PEDAL UFSCar
-        `.trim(),
-      });
+          `.trim(),
 
-      console.log(
-        `E-mail de recuperação enviado para ${email}. ID: ${result.messageId}`,
-      );
-    } catch (error) {
+          tags: [
+            'recuperacao-senha',
+            'pedal-ufscar',
+          ],
+        }),
+      },
+    );
+
+    const responseBody = await response
+      .json()
+      .catch(() => null);
+
+    if (!response.ok) {
       console.error(
-        'Erro ao enviar e-mail de recuperação:',
-        error,
+        'Erro da API da Brevo:',
+        response.status,
+        responseBody,
       );
 
       throw new BadRequestException(
         'Não foi possível enviar o código de recuperação por e-mail.',
       );
     }
+
+    console.log(
+      `E-mail de recuperação enviado para ${email}.`,
+      responseBody,
+    );
+
+    return responseBody;
   }
 
   private validateUserStatus(user: User) {
